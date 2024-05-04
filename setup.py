@@ -24,6 +24,9 @@ setup(
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [],
+        "console_scripts": [
+            "fake_gps = urc_intelsys_2024.sensors.gps_compass.fake_gps_compass:main"
+            "actual_gps = urc_intelsys_2024.sensors.gps_compass.actual_gps_compass:main"
+        ],
     },
 )

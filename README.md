@@ -20,3 +20,8 @@ The repository is divided into several main directories.
 - `test` - this directory contains tests that can be run using `colcon test`
 - `resource` - this directory should only contain the empty file `urc_intelsys_2024`. It is used purely for ROS 2's internals and shouldn't be altered.
 - `urc_intelsys_2024` - this directory is where our main codebase resides.
+
+## Contributing
+
+- When contributing a submodule, remember that all submodules must have an `__init__.py` in order to be recognized as a submodule.
+- When adding a new node, add its `main` function to the `entry_points` parameter in `setup.py` in the format `(name) = urc_intelsys_2024.(submodule1).(submodule2).(...).(file_name):main`.
