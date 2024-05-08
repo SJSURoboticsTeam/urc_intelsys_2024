@@ -1,6 +1,7 @@
 from typing import Tuple
 from urc_intelsys_2024.sensors.gps_compass.gps_compass_class import _GPSCompass
 import math
+import rclpy
 
 
 class FakeGPSCompass(_GPSCompass):
@@ -18,19 +19,12 @@ class FakeGPSCompass(_GPSCompass):
     ):
         return (math.pi / 2, 4)  # arbitrary values
 
-    def start_service(self):
-        pass
 
-    def stop_service(self):
-        pass
+def main(args=None):
+    rclpy.init(args=args)
 
+    fake_gpsc = FakeGPSCompass()
 
-def main():
-    from datetime import datetime
-    import time
+    rclpy.spin(fake_gpsc)  # starts the node, blocking
 
-    gps = FakeGPSCompass()
-    start_time = datetime.now()
-    while (datetime.now() - start_time).total_seconds() < 10:
-        print(gps.geographic_coordinates_to_relative_coordinates(0.0, 0.0))
-        time.sleep(1)
+    rclpy.shutdown()

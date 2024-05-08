@@ -1,6 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Tuple, Union
 import math
+import rclpy
+import rclpy.publisher
+from std_msgs.msg import Float64
+from urc_intelsys_2024_msgs.msg import GPS
 
 
 class Util:
@@ -72,9 +76,14 @@ class Util:
             print("No GPS Data")
 
 
-class _GPSCompass(ABC):
+class _GPSCompass(rclpy.Node, ABCMeta):
+    def __init__(self) -> None:
+        super().__init__()
+        self.gps_publisher = self.create_publisher(GPS, "sensors/gps", 10)
+        self.compass_publisher = self.create_publisher(Float64, "sensors/compass", 10)
+
     @abstractmethod
-    def get_cur_angle(self) -> int:
+    def get_cur_angle(self) -> float:
         """
         Returns the current angle from north, in degrees
         """
@@ -111,11 +120,3 @@ class _GPSCompass(ABC):
 
         # convert to radians before returning
         return (final_angle * math.pi / 180, distance)
-
-    @abstractmethod
-    def start_service(self):
-        pass
-
-    @abstractmethod
-    def stop_service(self):
-        pass
