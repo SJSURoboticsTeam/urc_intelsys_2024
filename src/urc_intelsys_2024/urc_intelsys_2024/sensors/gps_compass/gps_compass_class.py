@@ -1,10 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from typing import Tuple, Union
 import math
-import rclpy
-import rclpy.publisher
+from rclpy.node import Node
 from std_msgs.msg import Float64
 from urc_intelsys_2024_msgs.msg import GPS
+from urc_intelsys_2024.sensors.gps_compass.constants import GPS_TOPIC, COMPASS_TOPIC
+from urc_intelsys_2024.util.msg_creators import create_gps_msg
 
 
 class Util:
@@ -12,9 +13,7 @@ class Util:
     Methods were taken from AutoHelp
     """
 
-    def get_distance(
-        current_GPS: Tuple[float, float], target_GPS: Tuple[float, float]
-    ) -> Union[Tuple[float, float], None]:
+    def get_distance(current_GPS: GPS, target_GPS: GPS) -> Union[GPS, None]:
         """
         Returns a tuple containing the distance between current_GPS and target_GPS
         The tuple is of the following format: (distanceInKM, distanceInMiles)
@@ -23,10 +22,10 @@ class Util:
         R_KM = 6373.0
         R_MI = 3958.8
         try:
-            current_lat = math.radians(current_GPS[1])
-            current_lon = math.radians(current_GPS[0])
-            target_lat = math.radians(target_GPS[1])
-            target_lon = math.radians(target_GPS[0])
+            current_lat = math.radians(current_GPS.latitude)
+            current_lon = math.radians(current_GPS.longitude)
+            target_lat = math.radians(target_GPS.latitude)
+            target_lon = math.radians(target_GPS.longitude)
 
             dis_lon = target_lon - current_lon
             dis_lat = target_lat - current_lat
@@ -45,15 +44,14 @@ class Util:
         except:
             print("No GPS Data")
 
-    def get_bearing(current_GPS, target_GPS):
-        """Returns the angle between two GPS coordinates
+    def get_bearing(current_GPS: GPS, target_GPS: GPS) -> float:
+        """Returns the angle between two GPS coordinates, relative to north
 
         PARAMS:
             current_GPS (tuple): (latitude, longitude)
             target_GPS (tuple):  (latitude, longitude)
         RETURNS:
             float. angle between the two coordinates
-
         """
         try:
             current_latitude = math.radians(current_GPS[1])
@@ -75,40 +73,18 @@ class Util:
         except:
             print("No GPS Data")
 
-
-class _GPSCompass(rclpy.Node, ABCMeta):
-    def __init__(self) -> None:
-        super().__init__()
-        self.gps_publisher = self.create_publisher(GPS, "sensors/gps", 10)
-        self.compass_publisher = self.create_publisher(Float64, "sensors/compass", 10)
-
-    @abstractmethod
-    def get_cur_angle(self) -> float:
-        """
-        Returns the current angle from north, in degrees
-        """
-        pass
-
-    @abstractmethod
-    def get_cur_gps(self) -> Tuple[int, int]:
-        """
-        Returns the current GPS position in the form (latitude, longitude)
-        """
-        pass
-
     def geographic_coordinates_to_relative_coordinates(
-        self, target_latitude: float, target_longitude: float
+        cur_angle: float,
+        cur_gps: GPS,
+        target_gps: GPS,
     ) -> Tuple[float, float]:
         """
         Convert the target latitude/longitude into polar form of (theta, r)
         where theta is in radians
         """
-        cur_angle = self.get_cur_angle()
-        cur_gps = self.get_cur_gps()
-
-        distance = Util.get_distance(cur_gps, (target_latitude, target_longitude))
+        distance = Util.get_distance(cur_gps, target_gps)
         distance = distance[0] * 1000  # convert from km to m
-        target_angle = Util.get_bearing(cur_gps, (target_latitude, target_longitude))
+        target_angle = Util.get_bearing(cur_gps, target_gps)
 
         # this is how much we need to turn
         relative_angle = cur_angle - target_angle
@@ -120,3 +96,35 @@ class _GPSCompass(rclpy.Node, ABCMeta):
 
         # convert to radians before returning
         return (final_angle * math.pi / 180, distance)
+
+
+class _GPSCompass(Node, metaclass=ABCMeta):
+    def __init__(
+        self, gps_publish_seconds: float = 1.0, compass_publish_seconds: float = 0.2
+    ) -> None:
+        super().__init__("GPSCompass")
+        self.gps_publisher = self.create_publisher(GPS, GPS_TOPIC, 10)
+        self.compass_publisher = self.create_publisher(Float64, COMPASS_TOPIC, 10)
+
+        self.gps_timer = self.create_timer(
+            gps_publish_seconds,
+            lambda: self.gps_publisher.publish(self.get_cur_gps()),
+        )
+        self.compass_timer = self.create_timer(
+            compass_publish_seconds,
+            lambda: self.compass_publisher.publish(Float64(data=self.get_cur_angle())),
+        )
+
+    @abstractmethod
+    def get_cur_angle(self) -> float:
+        """
+        Returns the current angle from north, in degrees
+        """
+        pass
+
+    @abstractmethod
+    def get_cur_gps(self) -> GPS:
+        """
+        Returns the current GPS position
+        """
+        pass

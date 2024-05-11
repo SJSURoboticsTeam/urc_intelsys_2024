@@ -25,8 +25,9 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "fake_gps = urc_intelsys_2024.sensors.gps_compass.fake_gps_compass:main"
-            "actual_gps = urc_intelsys_2024.sensors.gps_compass.actual_gps_compass:main"
+            "fake_gps = urc_intelsys_2024.sensors.gps_compass.fake_gps_compass:main",
+            "actual_gps = urc_intelsys_2024.sensors.gps_compass.actual_gps_compass:main",
+            "gps_listener = urc_intelsys_2024.sensors.gps_compass.gps_listener:main",
         ],
     },
 )

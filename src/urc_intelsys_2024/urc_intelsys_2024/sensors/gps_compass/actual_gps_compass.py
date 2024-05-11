@@ -4,14 +4,15 @@ import serial.tools.list_ports as port_list
 import urc_intelsys_2024.sensors.gps_compass.LSM303 as LSM303
 import urc_intelsys_2024.sensors.gps_compass.GPS as GPS
 from threading import Thread
-import time
 import rclpy
+from urc_intelsys_2024.util.msg_creators import create_gps_msg
 
 
 class ActualGPSCompass(_GPSCompass):
     def __init__(self, port: str = None) -> None:
+        super().__init__()
         self.gpsState = True  # Keeps track of the reading state of the GPS
-        self.cur_gps = None
+        self.cur_gps = None  # (longitude, latitude)
         port_number = 0
         ports = list(
             filter(lambda port: "USB" not in port.device, port_list.comports())
@@ -57,11 +58,12 @@ class ActualGPSCompass(_GPSCompass):
             if temp is not None:
                 self.cur_gps = temp
 
-    def get_cur_gps(self) -> Tuple[int, int]:
+    def get_cur_gps(self) -> GPS:
         """
-        Returns latest GPS coordinates, in the format (longitude, latitude)
+        Returns latest GPS coordinates
         """
-        return self.cur_gps
+        # cur_gps is in the form (longitude, latitude)
+        return create_gps_msg(self.cur_gps[1], self.cur_gps[0])
 
     def start_service(self) -> None:
         """
@@ -78,11 +80,12 @@ class ActualGPSCompass(_GPSCompass):
 
 
 def main():
+    rclpy.init()
+
     gps = ActualGPSCompass()
     gps.start_service()
-    try:
-        while True:
-            print(gps.get_cur_gps(), gps.get_cur_angle())
-            time.sleep(1)
-    except KeyboardInterrupt:
-        gps.stop_service()
+    rclpy.spin(gps)
+
+    gps.stop_service()
+
+    rclpy.shutdown()
