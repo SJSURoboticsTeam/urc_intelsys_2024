@@ -2,9 +2,8 @@ from abc import ABCMeta, abstractmethod
 from typing import Tuple, Union
 import math
 from rclpy.node import Node
-from std_msgs.msg import Float64
 from urc_intelsys_2024_msgs.msg import GPS
-from urc_intelsys_2024.sensors.gps_compass.constants import GPS_TOPIC, COMPASS_TOPIC
+from urc_intelsys_2024.constants import GPS_TOPIC, QOS
 from urc_intelsys_2024.util.msg_creators import create_gps_msg
 
 
@@ -98,29 +97,15 @@ class Util:
         return (final_angle * math.pi / 180, distance)
 
 
-class _GPSCompass(Node, metaclass=ABCMeta):
-    def __init__(
-        self, gps_publish_seconds: float = 1.0, compass_publish_seconds: float = 0.2
-    ) -> None:
-        super().__init__("GPSCompass")
-        self.gps_publisher = self.create_publisher(GPS, GPS_TOPIC, 10)
-        self.compass_publisher = self.create_publisher(Float64, COMPASS_TOPIC, 10)
+class _GPS(Node, metaclass=ABCMeta):
+    def __init__(self, gps_publish_seconds: float = 1.0) -> None:
+        super().__init__("GPS")
+        self.gps_publisher = self.create_publisher(GPS, GPS_TOPIC, QOS)
 
         self.gps_timer = self.create_timer(
             gps_publish_seconds,
             lambda: self.gps_publisher.publish(self.get_cur_gps()),
         )
-        self.compass_timer = self.create_timer(
-            compass_publish_seconds,
-            lambda: self.compass_publisher.publish(Float64(data=self.get_cur_angle())),
-        )
-
-    @abstractmethod
-    def get_cur_angle(self) -> float:
-        """
-        Returns the current angle from north, in degrees
-        """
-        pass
 
     @abstractmethod
     def get_cur_gps(self) -> GPS:

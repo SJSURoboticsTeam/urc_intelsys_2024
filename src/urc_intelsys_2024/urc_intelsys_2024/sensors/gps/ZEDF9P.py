@@ -2,7 +2,7 @@ import serial
 import requests
 
 
-class gpsRead:
+class ZEDF9P:
     def __init__(self, port, baudrate):
         self.gps_port = serial.Serial(port, baudrate)
 
