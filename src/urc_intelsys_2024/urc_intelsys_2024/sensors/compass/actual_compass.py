@@ -1,3 +1,4 @@
+import rclpy
 import urc_intelsys_2024.sensors.compass.LSM303 as LSM303
 from urc_intelsys_2024.sensors.compass.compass import Compass
 
@@ -10,3 +11,9 @@ class ActualCompass(Compass):
 
     def get_cur_angle(self) -> float:
         return self.lsm303.get_heading()
+
+
+def main():
+    rclpy.init()
+    rclpy.spin(ActualCompass())
+    rclpy.shutdown()
