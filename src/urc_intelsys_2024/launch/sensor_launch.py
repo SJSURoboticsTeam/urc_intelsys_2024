@@ -1,13 +1,30 @@
-from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
-def generate_launch_description():
-    # all launch files must have a function with this name
+def generate_launch_description():  # all launch files need a function with this name
+    # LaunchConfiguration is just a "parameter" that can be passed from the cmd line
+    compass_type = LaunchConfiguration("compass_type")
+    gps_type = LaunchConfiguration("gps_type")
 
-    return LaunchDescription(
-        # put a list of nodes to be launched here
-        [
-            Node(package="urc_intelsys_2024", executable="fake_gps"),
-        ]
+    # give parameters default values
+    compass_arg = DeclareLaunchArgument(
+        "compass_type", default_value="actual", choices=["actual", "fake"]
     )
+    gps_arg = DeclareLaunchArgument(
+        "gps_type", default_value="actual", choices=["actual", "fake"]
+    )
+
+    # create nodes
+    # can't use the value in the parameter until we return the launch description.
+    # thus, the lists, allow us to say "substitute `compass_type` with the actual value at runtime"
+    gps_node = Node(
+        package="urc_intelsys_2024",
+        executable=[compass_type, "_compass"],
+    )
+    compass_node = Node(package="urc_intelsys_2024", executable=[gps_type, "_gps"])
+
+    return LaunchDescription([compass_arg, gps_arg, gps_node, compass_node])
