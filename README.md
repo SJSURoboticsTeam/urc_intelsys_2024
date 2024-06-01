@@ -2,6 +2,12 @@
 
 This repository contains the intelligent systems division's modules and sensor logic for SJSU Robotics' latest Mars Rover. It is based on [ROS Humble](https://docs.ros.org/en/humble/index.html).
 
+# Architecture
+
+Below is a diagram depicting the architecture of our `urc_intelsys_2024` package. Sensors (bottom) publish to their individual topics
+and are aggregated and preprocessed by the specific preprocessors, which send data to be used higher up in the command chain.
+![](./diagrams/Diagram.png)
+
 # Getting Started
 
 ## Dependencies
