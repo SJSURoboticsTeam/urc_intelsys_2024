@@ -2,6 +2,7 @@ import serial
 from dataclasses import dataclass
 from typing import Union
 from urc_intelsys_2024_msgs.msg import GPS
+import time
 
 
 @dataclass
@@ -14,12 +15,15 @@ class GNRMC:
 class ZEDF9P:
     def __init__(self, port, baudrate, timeout: float = 0.01):
         self.gps_port = serial.Serial(port, baudrate, timeout=timeout)
-        self.__gnrmc: GNRMC = GNRMC(None, None, False)
         self.lines = []
+        self.__gnrmc: GNRMC = GNRMC(None, None, False)
+
+        # sleep for a second to ensure we have data to populate self.gnrmc
+        time.sleep(1)
 
     @property
     def gnrmc(self):
-        self.read_all_available_sentences()
+        self._read_all_available_sentences()
         return self.__gnrmc
 
     def process_gnrmc(self, line: str) -> None:
@@ -43,15 +47,20 @@ class ZEDF9P:
 
     def get_position(self) -> GPS:
         """
-        Should only be called when gnrmc is valid
+        Should only be called when gnrmc is valid, otherwise
+        this will error because longitude and latitude are None
+        (not castable to float)
         """
         val = self.gnrmc
         return GPS(longitude=val.longitude, latitude=val.latitude)
 
-    def has_gps_lock(self):
+    def has_gps_lock(self) -> bool:
+        """
+        Returns whether the ZEDF9P has a GPS lock (has valid GNSS Coordinates)
+        """
         return self.gnrmc.valid
 
-    def read_all_available_sentences(self):
+    def _read_all_available_sentences(self):
         """
         Read all available sentences; relies on there being a timeout
         to prevent an infinite loop
@@ -66,9 +75,12 @@ class ZEDF9P:
                 break
             lines.append(b)
         self.lines = lines
-        self.process_available_sentences()
+        self._process_available_sentences()
 
-    def process_available_sentences(self):
+    def _process_available_sentences(self):
+        """
+        Processes all available sentences, updating self.gnrmc
+        """
         for line in self.lines:
             if "$GNRMC" in line:
                 self.__gnrmc = self.process_gnrmc(line)
