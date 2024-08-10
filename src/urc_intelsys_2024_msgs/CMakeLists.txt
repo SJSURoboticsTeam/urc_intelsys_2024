@@ -25,8 +25,19 @@ endif()
 
 # generate messages
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GPS.msg"
+  "msg/GPSNavDetails.msg"
+  "msg/ObjectNavDetails.msg"
+  "msg/PolarCoordinate.msg"
+  "msg/Task.msg"
+  "msg/TGPS.msg"
+  "msg/TGPSNavDetails.msg"
+  "msg/TPolarCoordinate.msg"
+  "msg/TTask.msg"
+
+  DEPENDENCIES std_msgs
 )
 
 ament_package()
