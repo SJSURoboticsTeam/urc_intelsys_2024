@@ -4,9 +4,10 @@ This repository contains the intelligent systems division's modules and sensor l
 
 # Architecture
 
-Below is a diagram depicting the architecture of our `urc_intelsys_2024` package. Sensors (bottom) publish to their individual topics
-and are aggregated and preprocessed by the specific preprocessors, which send data to be used higher up in the command chain.
-![](./diagrams/Diagram.png)
+- Sensors publish their raw data to their respective topics
+- Map nodes process that data and publish a 2d array with obstacles and free spaces to /map
+- Control nodes subscribe to /map and any raw data that they need to in order to publish commands to /drive
+- Drive node subscribes to /drive and converts the request to CAN frames that it sends to the CAN bus
 
 # Getting Started
 
