@@ -2,6 +2,13 @@
 
 This repository contains the intelligent systems division's modules and sensor logic for SJSU Robotics' latest Mars Rover. It is based on [ROS Humble](https://docs.ros.org/en/humble/index.html).
 
+# Architecture
+
+- Sensors publish their raw data to their respective topics
+- Map nodes process that data and publish a 2d array with obstacles and free spaces to /map
+- Control nodes subscribe to /map and any raw data that they need to in order to publish commands to /drive
+- Drive node subscribes to /drive and converts the request to CAN frames that it sends to the CAN bus
+
 # Getting Started
 
 ## Dependencies

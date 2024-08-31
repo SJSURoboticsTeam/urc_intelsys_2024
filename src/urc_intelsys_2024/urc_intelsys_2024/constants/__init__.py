@@ -8,3 +8,5 @@ GPS_TOPIC = "sensors/gps"
 
 # misc constants
 QOS = 10  # quality of service, used when creating publishers/subscribers
+
+UPDATE_FREQ = 0.1
