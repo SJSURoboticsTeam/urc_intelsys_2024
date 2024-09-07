@@ -2,7 +2,6 @@ from typing import Tuple
 from urc_intelsys_2024.sensors.gps.gps import _GPS
 import serial.tools.list_ports as port_list
 from urc_intelsys_2024.sensors.gps.ZEDF9P import ZEDF9P
-from threading import Thread
 from urc_intelsys_2024_msgs.msg import GPS
 import rclpy
 

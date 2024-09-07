@@ -1,8 +1,6 @@
 from setuptools import find_packages, setup
-import os
-from glob import glob
 
-package_name = "urc_intelsys_2024"
+package_name = "compass"
 
 setup(
     name=package_name,
@@ -11,17 +9,19 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        (
-            os.path.join("share", package_name, "launch"),
-            glob(os.path.join("launch", "*.[pxy][yma]*")),
-        ),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="SJSU Robotics Team",
     maintainer_email="christopher.e.hall@sjsu.edu",
-    description="URC Intelsys 2024 Launch Files",
+    description="URC Intelsys 2024 Compass",
     license="Apache-2.0",
     tests_require=["pytest"],
-    entry_points={},  # no entry points, only launch files
+    entry_points={
+        "console_scripts": [
+            "actual_compass = compass.actual_compass:main",
+            "fake_compass = compass.fake_compass:main",
+            "compass_listener = compass.compass_listener:main",
+        ],
+    },
 )
