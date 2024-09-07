@@ -56,3 +56,4 @@ Launch files (defined in `src/urc_intelsys_2024/launch/*.py`) can be run with `r
 
 - When contributing a submodule, remember that all submodules must have an `__init__.py` in order to be recognized as a submodule.
 - When adding a new node, add its `main` function to the `entry_points` parameter in `setup.py` in the format `(name) = (package_name).(submodule1).(submodule2).(...).(file_name):main`.
+- Before pushing your code, please run `python3 -m black ./src` to format your code. Otherwise, your code will fail formatting checks.
