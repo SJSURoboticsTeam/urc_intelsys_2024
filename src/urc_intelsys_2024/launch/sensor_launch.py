@@ -21,9 +21,9 @@ def generate_launch_description():  # all launch files need a function with this
     # can't use the value in the parameter until we return the launch description.
     # thus, the lists, allow us to say "substitute `compass_type` with the actual value at runtime"
     gps_node = Node(
-        package="urc_intelsys_2024",
+        package="compass",
         executable=[compass_type, "_compass"],
     )
-    compass_node = Node(package="urc_intelsys_2024", executable=[gps_type, "_gps"])
+    compass_node = Node(package="gps", executable=[gps_type, "_gps"])
 
     return LaunchDescription([compass_arg, gps_arg, gps_node, compass_node])

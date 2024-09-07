@@ -1,4 +1,4 @@
-from urc_intelsys_2024.sensors.compass.compass import Compass
+from compass.compass import Compass
 import random
 import rclpy
 
