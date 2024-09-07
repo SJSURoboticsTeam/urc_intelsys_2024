@@ -1,6 +1,6 @@
 import rclpy
-import urc_intelsys_2024.sensors.compass.LSM303 as LSM303
-from urc_intelsys_2024.sensors.compass.compass import Compass
+import compass.LSM303 as LSM303
+from compass.compass import Compass
 
 
 class ActualCompass(Compass):

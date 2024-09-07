@@ -1,7 +1,7 @@
-from urc_intelsys_2024.sensors.gps.gps import _GPS
+from gps.gps import _GPS
 from urc_intelsys_2024_msgs.msg import GPS
 import rclpy
-from urc_intelsys_2024.util.msg_creators import create_gps_msg
+from std_msgs.msg import Float64
 
 
 class FakeGPSCompass(_GPS):
@@ -9,7 +9,9 @@ class FakeGPSCompass(_GPS):
         super().__init__()
 
     def get_cur_gps(self) -> GPS:
-        return create_gps_msg(100, 100)
+        return GPS(
+            longitude=Float64(data=float(100)), latitude=Float64(data=float(100))
+        )
 
 
 def main(args=None):

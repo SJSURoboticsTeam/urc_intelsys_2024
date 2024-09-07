@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from urc_intelsys_2024_msgs.msg import GPS
-from urc_intelsys_2024.constants import GPS_TOPIC, QOS
+from constants import GPS_TOPIC, QOS
 
 
 class GPSListener(Node):

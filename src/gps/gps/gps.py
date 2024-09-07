@@ -3,8 +3,7 @@ from typing import Tuple, Union
 import math
 from rclpy.node import Node
 from urc_intelsys_2024_msgs.msg import GPS
-from urc_intelsys_2024.constants import GPS_TOPIC, QOS
-from urc_intelsys_2024.util.msg_creators import create_gps_msg
+from constants import GPS_TOPIC, QOS
 
 
 class Util:

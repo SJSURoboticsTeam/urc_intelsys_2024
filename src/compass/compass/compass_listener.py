@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64
-from urc_intelsys_2024.constants import COMPASS_TOPIC, QOS
+from constants import COMPASS_TOPIC, QOS
 
 
 class CompassListener(Node):
