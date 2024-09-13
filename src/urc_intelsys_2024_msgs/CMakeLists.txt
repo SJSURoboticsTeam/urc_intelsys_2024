@@ -36,6 +36,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TGPSNavDetails.msg"
   "msg/TPolarCoordinate.msg"
   "msg/TTask.msg"
+  "msg/Map1.msg"
+  "msg/HexMap1.msg"
 
   DEPENDENCIES std_msgs
 )
