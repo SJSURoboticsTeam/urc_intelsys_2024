@@ -1,2 +1,2 @@
-int8 flatcoords
+int8[] flatcoords
 bool safe
