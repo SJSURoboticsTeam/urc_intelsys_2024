@@ -40,4 +40,3 @@ def main():
         rclpy.spin(CompassRunner())
     except KeyboardInterrupt:
         print("Shutting down")
-    rclpy.shutdown()
