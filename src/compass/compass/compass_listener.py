@@ -14,5 +14,8 @@ class CompassListener(Node):
 
 def main():
     rclpy.init()
-    rclpy.spin(CompassListener())
+    try:
+        rclpy.spin(CompassListener())
+    except KeyboardInterrupt:
+        print("Shutting down")
     rclpy.shutdown()
