@@ -1,7 +1,9 @@
+from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():  # all launch files need a function with this name
@@ -26,4 +28,14 @@ def generate_launch_description():  # all launch files need a function with this
     )
     compass_node = Node(package="gps", executable=[gps_type, "_gps"])
 
-    return LaunchDescription([compass_arg, gps_arg, gps_node, compass_node])
+    # create launch description for the luxonis depthai ros driver
+    camera_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            get_package_share_directory("depthai_ros_driver")
+            + "/launch/camera.launch.py"
+        ),
+    )
+
+    return LaunchDescription(
+        [compass_arg, gps_arg, gps_node, compass_node, camera_launch]
+    )
