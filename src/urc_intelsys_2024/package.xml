@@ -17,6 +17,8 @@
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>python3-adafruit-blinka-pip</exec_depend>
   <exec_depend>urc_intelsys_2024_msgs</exec_depend>
+  <exec_depend>depthai-ros</exec_depend>
+  <exec_depend>depthai_ros_driver</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
