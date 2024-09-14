@@ -1,12 +1,11 @@
 from typing import Tuple
-from gps.gps import _GPS
+from gps.gps_type import GPS_
 import serial.tools.list_ports as port_list
 from gps.ZEDF9P import ZEDF9P
 from urc_intelsys_2024_msgs.msg import GPS
-import rclpy
 
 
-class ActualGPSCompass(_GPS):
+class ActualGPS(GPS_):
     def __init__(self, port: str = None) -> None:
         super().__init__()
         self.gpsState = True  # Keeps track of the reading state of the GPS
@@ -39,12 +38,3 @@ class ActualGPSCompass(_GPS):
         """
         # cur_gps is in the form (longitude, latitude)
         return self.gps.get_position()
-
-
-def main():
-    rclpy.init()
-
-    gps = ActualGPSCompass()
-    rclpy.spin(gps)
-
-    rclpy.shutdown()

@@ -1,9 +1,7 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import Tuple, Union
 import math
-from rclpy.node import Node
 from urc_intelsys_2024_msgs.msg import GPS
-from constants import GPS_TOPIC, QOS
 
 
 class Util:
@@ -96,16 +94,7 @@ class Util:
         return (final_angle * math.pi / 180, distance)
 
 
-class _GPS(Node, metaclass=ABCMeta):
-    def __init__(self, gps_publish_seconds: float = 1.0) -> None:
-        super().__init__("GPS")
-        self.gps_publisher = self.create_publisher(GPS, GPS_TOPIC, QOS)
-
-        self.gps_timer = self.create_timer(
-            gps_publish_seconds,
-            lambda: self.gps_publisher.publish(self.get_cur_gps()),
-        )
-
+class GPS_(ABC):
     @abstractmethod
     def get_cur_gps(self) -> GPS:
         """

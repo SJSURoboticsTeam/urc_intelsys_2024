@@ -6,7 +6,7 @@ from constants import COMPASS_TOPIC, QOS
 
 class CompassListener(Node):
     def __init__(self):
-        super().__init__("CompassListener")
+        super().__init__("compass_listener")
         self.create_subscription(
             Float64, COMPASS_TOPIC, lambda heading: print(heading), QOS
         )
@@ -14,5 +14,7 @@ class CompassListener(Node):
 
 def main():
     rclpy.init()
-    rclpy.spin(CompassListener())
-    rclpy.shutdown()
+    try:
+        rclpy.spin(CompassListener())
+    except KeyboardInterrupt:
+        print("Shutting down")

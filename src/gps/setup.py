@@ -19,8 +19,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "fake_gps = gps.fake_gps:main",
-            "actual_gps = gps.actual_gps:main",
+            "gps = gps.main:main",
             "gps_listener = gps.gps_listener:main",
         ],
     },

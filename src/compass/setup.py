@@ -19,8 +19,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "actual_compass = compass.actual_compass:main",
-            "fake_compass = compass.fake_compass:main",
+            "compass = compass.main:main",
             "compass_listener = compass.compass_listener:main",
         ],
     },
