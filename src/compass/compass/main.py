@@ -34,8 +34,8 @@ class CompassRunner(Node):
         )
 
 
-def main():
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
     try:
         rclpy.spin(CompassRunner())
     except KeyboardInterrupt:

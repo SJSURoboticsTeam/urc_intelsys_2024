@@ -35,8 +35,8 @@ class GPSRunner(Node):
         )
 
 
-def main():
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
     try:
         rclpy.spin(GPSRunner())
     except KeyboardInterrupt:

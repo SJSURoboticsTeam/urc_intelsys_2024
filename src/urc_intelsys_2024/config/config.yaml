@@ -1,0 +1,8 @@
+compass:
+  ros__parameters:
+    compass_publish_seconds: 2.0
+    compass_type: fake
+gps:
+  ros__parameters:
+    gps_publish_seconds: 2.0
+    gps_type: fake
