@@ -15,7 +15,7 @@ class GPSRunner(Node):
             parameters=[
                 # "name", default_value
                 ("gps_publish_seconds", 0.5),
-                ("gps_type", "actual"),
+                ("gps_type", "fake"),
             ],
         )
 
