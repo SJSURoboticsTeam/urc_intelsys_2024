@@ -19,7 +19,7 @@ class CartesianPublisher(Node):
         # semi-major axis constant
         self.A = 6378137
         # eccentricity constant
-        self.EE = 6.69437999013 * 10^(-3)
+        self.EE = 6.69437999013 * (10 ** (-3))
         self.x_ref = 0
         self.y_ref = 0
         self.z_ref = 0
@@ -29,7 +29,7 @@ class CartesianPublisher(Node):
     
     def gnss_to_ecef(self, lat, long):
         # convert to gnss to ecef(cartesian coordinate with center of earth as origin)
-        denom = math.sqrt(1 - self.EE * math.sin(lat)^2)
+        denom = math.sqrt(1 - self.EE * math.sin(lat) ** 2)
         x = (self.A / denom) * math.cos(lat) * math.cos(long)
         y = (self.A / denom) * math.cos(lat) * math.sin(long)
         z = (self.A * (1 - self.EE) / denom) * math.sin(lat)
@@ -55,25 +55,26 @@ class CartesianPublisher(Node):
         
         x, y, z = self.gnss_to_ecef(lat_rad, long_rad)
         e, n = self.ecef_to_enu(lat_rad, long_rad, x, y, z)
+        x, y = self.scale_to_map(10000, 1000, e, n)
+
+        return x, y
         
     def scale_to_map(self, physical_size, map_size, e, n):
         # find scaling factor
         s = (map_size - 1) / physical_size
+
         x = math.floor(n / 2 + e * s)
         y = math.floor(n / 2 + n * s)
 
-        if 0 <= x < map_size and 0 <= x < map_size:
-            return (x, y)
-        else:
-            print("The calculated indices are out of bounds")
-
-
+        return (x, y)
+        
     def listener_callback(self, msg):
         newMsg = CART()
-        newMsg.x, newMsg.y = self.convert_gnss_to_cart(msg.latitude, msg.longitude)
+        newMsg.x, newMsg.y = self.gnss_to_cart(msg.latitude, msg.longitude)
 
         self.publisher_.publish(newMsg)
-        self.get_logger().info('Publishing: "%s"' % newMsg.x)
+        self.get_logger().info("Publishing x-coordinate: %s" % newMsg.x)
+        self.get_logger().info("Publishing y-coordinate: %s" % newMsg.y)
 
 def main(args=None):
     rclpy.init(args=args)
