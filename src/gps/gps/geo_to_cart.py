@@ -88,12 +88,17 @@ class CartesianPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    # TODO: Should this node be spun in main? 
-    my_node = CartesianPublisher()
-    rclpy.spin(my_node)
+    try: 
+        my_node = CartesianPublisher()
+        rclpy.spin(my_node)
+        my_node.destroy_node()
+        rclpy.shutdown()
+    except KeyboardInterrupt: 
+        print("shutting down")
+        # Destroy the node explicitly
+        # (optional - otherwise it will be done automatically
+        # when the garbage collector destroys the node object)
+        my_node.destroy_node()
+        rclpy.shutdown()
 
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    my_node.destroy_node()
-    rclpy.shutdown()
+    

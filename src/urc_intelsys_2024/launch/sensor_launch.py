@@ -14,6 +14,7 @@ def generate_launch_description():  # all launch files need a function with this
     # thus, the lists, allow us to say "substitute `compass_type` with the actual value at runtime"
     compass_node = Node(package="compass", executable="compass", parameters=[config])
     gps_node = Node(package="gps", executable="gps", parameters=[config])
+    geo_to_cart_node = Node(package="gps", executable="geo_to_cart", parameters=[config])
 
     # create launch description for the luxonis depthai ros driver
     camera_launch = IncludeLaunchDescription(
@@ -23,4 +24,4 @@ def generate_launch_description():  # all launch files need a function with this
         ),
     )
 
-    return LaunchDescription([gps_node, compass_node, camera_launch])
+    return LaunchDescription([gps_node, geo_to_cart_node, compass_node, camera_launch])
