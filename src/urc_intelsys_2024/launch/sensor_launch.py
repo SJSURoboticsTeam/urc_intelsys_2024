@@ -17,6 +17,9 @@ def generate_launch_description():  # all launch files need a function with this
         package="compass", executable="quaternion_publisher", parameters=[config]
     )
     gps_node = Node(package="gps", executable="gps", parameters=[config])
+    geo_to_cart_node = Node(
+        package="gps", executable="geo_to_cart", parameters=[config]
+    )
 
     # create launch description for the luxonis depthai ros driver
     camera_launch = IncludeLaunchDescription(
@@ -27,5 +30,11 @@ def generate_launch_description():  # all launch files need a function with this
     )
 
     return LaunchDescription(
-        [gps_node, compass_node, quaternion_compass_node, camera_launch]
+        [
+            gps_node,
+            geo_to_cart_node,
+            quaternion_compass_node,
+            compass_node,
+            camera_launch,
+        ]
     )

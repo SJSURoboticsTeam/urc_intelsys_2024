@@ -11,6 +11,7 @@ DEPTH_CAMERA_TOPIC = "/camera/depth/image_raw"
 # In-between topics
 GOAL_TOPIC = "/goal"
 MAP_TOPIC = "/map"
+CARTESIAN_TOPIC = "/cartesian"
 
 # misc constants
 QOS = 10  # quality of service, used when creating publishers/subscribers

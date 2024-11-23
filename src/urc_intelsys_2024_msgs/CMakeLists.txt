@@ -27,6 +27,7 @@ endif()
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/CART.msg"
   "msg/GPS.msg"
   "msg/GPSNavDetails.msg"
   "msg/ObjectNavDetails.msg"
