@@ -1,13 +1,20 @@
 import rclpy
 from rclpy.node import Node
 from constants import GPS_TOPIC, CARTESIAN_TOPIC
-from std_msgs.msg import String
 from urc_intelsys_2024_msgs.msg import GPS, CART
 import math
 
 class CartesianPublisher(Node):
     def __init__(self):
         super().__init__('Cartesian_Publisher')
+        self.declare_parameters(
+            namespace="",
+            parameters=[
+                # "name", default_value
+                ("ref_latitude", 90),
+                ("ref_longitude", 90)
+            ],
+        )
         self.publisher_ = self.create_publisher(CART, CARTESIAN_TOPIC, 10)
         
         self.subscription = self.create_subscription(
@@ -20,9 +27,11 @@ class CartesianPublisher(Node):
         self.A = 6378137
         # eccentricity constant
         self.EE = 6.69437999013 * (10 ** (-3))
-        self.x_ref = 0
-        self.y_ref = 0
-        self.z_ref = 0
+
+        lat_rad = self.deg_to_rad(self.get_parameter("ref_latitude").value)
+        long_rad = self.deg_to_rad(self.get_parameter("ref_longitude").value)
+        
+        self.x_ref, self.y_ref, self.z_ref = self.gnss_to_ecef(lat_rad, long_rad)
 
     def deg_to_rad(self, deg):
         return deg * math.pi / 180
@@ -79,8 +88,8 @@ class CartesianPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
 
+    # TODO: Should this node be spun in main? 
     my_node = CartesianPublisher()
-
     rclpy.spin(my_node)
 
     # Destroy the node explicitly
@@ -88,7 +97,3 @@ def main(args=None):
     # when the garbage collector destroys the node object)
     my_node.destroy_node()
     rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
