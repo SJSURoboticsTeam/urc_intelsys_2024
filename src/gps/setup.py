@@ -21,7 +21,7 @@ setup(
         "console_scripts": [
             "gps = gps.main:main",
             "gps_listener = gps.gps_listener:main",
-            "geo_to_cart = gps.geo_to_cart:main"
+            "geo_to_cart = gps.geo_to_cart:main",
         ],
     },
 )
