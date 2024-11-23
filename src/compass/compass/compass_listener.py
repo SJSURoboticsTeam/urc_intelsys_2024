@@ -4,6 +4,7 @@ from std_msgs.msg import Float64
 from constants import COMPASS_TOPIC, QOS
 
 
+
 class CompassListener(Node):
     def __init__(self):
         super().__init__("compass_listener")
