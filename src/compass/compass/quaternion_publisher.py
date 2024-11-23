@@ -13,7 +13,6 @@ class QuaternionPublisher(Node):
         self.create_subscription(Float64, COMPASS_TOPIC, self.float_callback, 10)
 
         self.publisher_ = self.create_publisher(Quaternion, "quaternion_topic", 10)
-        self.timer = self.create_timer(1.0, self.timer_callback)
 
     def float_callback(self, msg):
         # convert the float to a quaternion
