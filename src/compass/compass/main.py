@@ -1,5 +1,3 @@
-from compass.actual_compass import ActualCompass
-from compass.fake_compass import FakeCompass
 from std_msgs.msg import Float64
 from constants import COMPASS_TOPIC, QOS
 from rclpy.node import Node
@@ -20,8 +18,12 @@ class CompassRunner(Node):
         )
 
         if self.get_parameter("compass_type").value == "actual":
+            from compass.actual_compass import ActualCompass
+
             self.compass = ActualCompass()
         elif self.get_parameter("compass_type").value == "fake":
+            from compass.fake_compass import FakeCompass
+
             self.compass = FakeCompass()
         else:
             raise ValueError("Unknown compass type")
