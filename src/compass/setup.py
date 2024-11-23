@@ -21,7 +21,6 @@ setup(
         "console_scripts": [
             "compass = compass.main:main",
             "compass_listener = compass.compass_listener:main",
-            
             "quaternion_publisher = compass.quaternion_publisher:main",
         ],
     },
