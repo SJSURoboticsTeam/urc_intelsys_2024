@@ -37,6 +37,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TGPSNavDetails.msg"
   "msg/TPolarCoordinate.msg"
   "msg/TTask.msg"
+  "srv/GeoToCart.srv"
 
   DEPENDENCIES std_msgs
 )
