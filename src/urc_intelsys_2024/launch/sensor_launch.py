@@ -20,27 +20,31 @@ def generate_launch_description():  # all launch files need a function with this
     geo_to_cart_node = Node(
         package="gps", executable="geo_to_cart", parameters=[config]
     )
+    geo_to_cart_service = Node(
+        package="gps", executable="geo_to_cart_srv", parameters=[config]
+    )
 
     # map/world frame related
     map_node = Node(package="map", executable="map", parameters=[config])
     world_frame_node = Node(package="map", executable="worldframe", parameters=[config])
 
     # create launch description for the luxonis depthai ros driver
-    camera_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            get_package_share_directory("depthai_ros_driver")
-            + "/launch/camera.launch.py"
-        ),
-    )
+    # camera_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         get_package_share_directory("depthai_ros_driver")
+    #         + "/launch/camera.launch.py"
+    #     ),
+    # )
 
     return LaunchDescription(
         [
             gps_node,
             geo_to_cart_node,
+            geo_to_cart_service,
             quaternion_compass_node,
             compass_node,
             map_node,
             world_frame_node,
-            camera_launch,
+            # camera_launch,
         ]
     )
