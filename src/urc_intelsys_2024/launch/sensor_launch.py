@@ -15,12 +15,24 @@ def generate_launch_description():  # all launch files need a function with this
     compass_node = Node(package="compass", executable="compass", parameters=[config])
     gps_node = Node(package="gps", executable="gps", parameters=[config])
 
-    # create launch description for the luxonis depthai ros driver
-    camera_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            get_package_share_directory("depthai_ros_driver")
-            + "/launch/camera.launch.py"
-        ),
+    camera_localizer_node = Node(
+        package="obstacle_detection",
+        executable="camera_localizer_node",
+        name="camera_localizer",
+        parameters=[config]
     )
 
-    return LaunchDescription([gps_node, compass_node, camera_launch])
+    # create launch description for the luxonis depthai ros driver
+    # camera_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         get_package_share_directory("depthai_ros_driver")
+    #         + "/launch/camera.launch.py"
+    #     ),
+    # )
+
+    return LaunchDescription([
+        gps_node, 
+        compass_node, 
+        # camera_launch,
+        camera_localizer_node
+    ])
