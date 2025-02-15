@@ -8,5 +8,16 @@ gps:
     gps_type: fake
 geo_to_cart:
   ros__parameters:
-    ref_latitude: 90
-    ref_longitude: 90
+    ref_latitude: 100
+    ref_longitude: 100
+task_manager:
+  ros__parameters:
+    task_types:
+      # 1 = GPSNAV, 2 = OBJECTNAV, 3 = ARUCONAV
+      - 1
+      - 1
+      - 2
+    task_details:
+      - '{"goal_latitude": 101.0, "goal_longitude": 101.0}'
+      - '{"goal_latitude": 102.0, "goal_longitude": 102.0}'
+      - "{}"

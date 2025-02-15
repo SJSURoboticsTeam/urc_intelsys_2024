@@ -6,4 +6,4 @@ class ObjectNav(rclpy.node.Node):
         super().__init__("objectnav")
 
     def call(self, *args, **kwargs):
-        pass
+        raise RuntimeError("ObjectNav.call not implemented yet!")

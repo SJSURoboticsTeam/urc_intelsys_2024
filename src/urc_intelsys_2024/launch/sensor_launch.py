@@ -1,8 +1,6 @@
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():  # all launch files need a function with this name
@@ -23,10 +21,18 @@ def generate_launch_description():  # all launch files need a function with this
     geo_to_cart_service = Node(
         package="gps", executable="geo_to_cart_srv", parameters=[config]
     )
+    gps_distance_service = Node(
+        package="gps", executable="gps_distance_srv", parameters=[config]
+    )
 
     # map/world frame related
     map_node = Node(package="map", executable="map", parameters=[config])
     world_frame_node = Node(package="map", executable="worldframe", parameters=[config])
+
+    # task related
+    task_manager_node = Node(
+        package="control", executable="task_manager", parameters=[config]
+    )
 
     # create launch description for the luxonis depthai ros driver
     # camera_launch = IncludeLaunchDescription(
@@ -38,13 +44,19 @@ def generate_launch_description():  # all launch files need a function with this
 
     return LaunchDescription(
         [
+            # gps package nodes
             gps_node,
             geo_to_cart_node,
             geo_to_cart_service,
+            gps_distance_service,
+            # compass package nodes
             quaternion_compass_node,
             compass_node,
+            # map package nodes
             map_node,
             world_frame_node,
+            # control package nodes
+            task_manager_node,
             # camera_launch,
         ]
     )
