@@ -1,7 +1,7 @@
 import rclpy.node
-from constants import GPS_TOPIC, QOS
-from urc_intelsys_2024_msgs.msg import GPS
-from urc_intelsys_2024_msgs.srv import GPSDistance
+from constants import GPS_TOPIC, QOS, GOAL_TOPIC
+from urc_intelsys_2024_msgs.msg import GPS, CART
+from urc_intelsys_2024_msgs.srv import GPSDistance, GeoToCart
 
 
 class GPSNav(rclpy.node.Node):
@@ -17,9 +17,23 @@ class GPSNav(rclpy.node.Node):
         self.create_subscription(GPS, GPS_TOPIC, self.update_cur_gps, QOS)
 
         self.cur_gps = None
+        self.goal_gps = None
+        self.goal_cart = None
         self.last_known_distance = float("inf")
-        self.client = self.create_client(GPSDistance, "gps_distance")
+        self.distance_client = self.create_client(GPSDistance, "gps_distance")
+        self.cart_client = self.create_client(GeoToCart, "geo_to_cart")
         self.requests = set()
+
+        self.goal_publisher = self.create_publisher(CART, GOAL_TOPIC, QOS)
+        self.create_timer(1.0, self.publish_goal_cart)
+
+    def publish_goal_cart(self):
+        if self.goal_gps is not None and self.goal_cart is not None:
+            self.goal_publisher.publish(self.goal_cart)
+
+    def update_goal_cart(self, future: rclpy.Future):
+        repsonse: GeoToCart.Response = future.result()
+        self.goal_cart = repsonse.out
 
     def update_cur_gps(self, a: GPS):
         self.cur_gps = a
@@ -31,18 +45,27 @@ class GPSNav(rclpy.node.Node):
 
     def call(self, goal_latitude: float, goal_longitude: float) -> bool:
         self.get_logger().info(
-            f"called with {goal_latitude} {goal_longitude} of type {type(goal_longitude)} {type(goal_latitude)}, cur gps {self.cur_gps}, self {self}",
+            f"called with {goal_latitude} {goal_longitude}, cur gps {self.cur_gps}",
         )
+
         goal_gps = GPS()
         goal_gps.latitude = goal_latitude
         goal_gps.longitude = goal_longitude
+        if goal_gps != self.goal_gps:
+            self.goal_cart = None
+            self.goal_gps = goal_gps
+            request = GeoToCart.Request()
+            request.inp = goal_gps
+            self.cart_client.call_async(request).add_done_callback(
+                self.update_goal_cart
+            )
         if self.cur_gps is not None:
             request = GPSDistance.Request()
             request.current = self.cur_gps
             request.target = goal_gps
 
             # call and add to list
-            call = self.client.call_async(request)
+            call = self.distance_client.call_async(request)
             call.add_done_callback(self.update_last_known_distance)
             self.requests.add(call)
 
@@ -55,5 +78,8 @@ class GPSNav(rclpy.node.Node):
                 for call in self.requests:
                     call.cancel()
                 self.requests = set()
+                # reset goal gps and goal cart
+                self.goal_gps = None
+                self.goal_cart = None
                 return True
         return False
