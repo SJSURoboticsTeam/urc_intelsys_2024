@@ -39,9 +39,14 @@ class GPSNav(rclpy.node.Node):
         self.cur_gps = a
 
     def update_last_known_distance(self, future: rclpy.Future):
-        self.requests.remove(future)
-        response: GPSDistance.Response = future.result()
-        self.last_known_distance = response.distance_in_km
+        good = True
+        if future in self.requests:
+            self.requests.remove(future)
+        else:
+            good = False
+        if good:
+            response: GPSDistance.Response = future.result()
+            self.last_known_distance = response.distance_in_km
 
     def call(self, goal_latitude: float, goal_longitude: float) -> bool:
         self.get_logger().info(
@@ -75,7 +80,11 @@ class GPSNav(rclpy.node.Node):
             if self.last_known_distance * 1000 <= 2:
                 # reset distance
                 self.last_known_distance = float("inf")
-                for call in self.requests:
+
+                # TODO - figure better way out for this since there could be
+                # concurrent modification
+                copy = list(self.requests)
+                for call in copy:
                     call.cancel()
                 self.requests = set()
                 # reset goal gps and goal cart
