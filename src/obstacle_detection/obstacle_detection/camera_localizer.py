@@ -22,6 +22,7 @@ class CameraLocalizerDetection:
     spatial_z: float
     confidence: float
 
+
 class CameraLocalizer:
     MAX_HEIGHT = 130  # 130 mm = 13 cm = max height we can roll over
 
@@ -39,10 +40,9 @@ class CameraLocalizer:
         """
         self.openvino_version = openvino_version
 
-
         # Store blob path
         self.blob_path = str(Path(model_path).resolve().absolute())
-        
+
         # Verify blob file exists
         if not Path(self.blob_path).exists():
             raise FileNotFoundError(f"Model blob not found at: {self.blob_path}")
@@ -141,7 +141,7 @@ class CameraLocalizer:
         spatialDetectionNetwork.setNumClasses(80)  # COCO dataset classes
         spatialDetectionNetwork.setCoordinateSize(4)
         spatialDetectionNetwork.setIouThreshold(0.5)
-        
+
         # spatialDetectionNetwork.setAnchors(
         #     [10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319]
         # )
@@ -348,9 +348,14 @@ class CameraLocalizer:
                         with self.lock:
                             # we only want the distance using the x and z, not using y
                             # so we just use pythagorean theorem
-                            xz_dist = np.sqrt(detection.spatialCoordinates.x**2 + detection.spatialCoordinates.z**2)
+                            xz_dist = np.sqrt(
+                                detection.spatialCoordinates.x**2
+                                + detection.spatialCoordinates.z**2
+                            )
                             dec = CameraLocalizerDetection(
-                                np.arctan2(detection.spatialCoordinates.x, dep) * 180 / np.pi,
+                                np.arctan2(detection.spatialCoordinates.x, dep)
+                                * 180
+                                / np.pi,
                                 h,
                                 distance=xz_dist,
                                 xmin=detection.xmin,
@@ -360,7 +365,7 @@ class CameraLocalizer:
                                 spatial_x=detection.spatialCoordinates.x,
                                 spatial_y=detection.spatialCoordinates.y,
                                 spatial_z=detection.spatialCoordinates.z,
-                                confidence=detection.confidence
+                                confidence=detection.confidence,
                             )
                             self._current_detections.append(dec)
                             if dec.height > CameraLocalizer.MAX_HEIGHT:
