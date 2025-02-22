@@ -6,4 +6,4 @@ class ArucoNav(rclpy.node.Node):
         super().__init__("aruconav")
 
     def call(self, *args, **kwargs):
-        pass
+        raise RuntimeError("ArucoNav.call not implemented yet!")

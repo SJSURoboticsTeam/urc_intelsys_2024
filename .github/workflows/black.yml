@@ -1,12 +1,20 @@
 name: Lint
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
-  lint:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      # format code
+      - name: Run black
+        uses: psf/black@stable
         with:
           src: "./src"
+          options: "" # that way it will format all files instead of just checking
+      # commit back any changes
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Format code

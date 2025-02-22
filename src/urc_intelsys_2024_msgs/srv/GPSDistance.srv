@@ -1,0 +1,5 @@
+GPS current
+GPS target
+---
+float64 distance_in_km
+float64 bearing_in_degrees
