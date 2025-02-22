@@ -13,6 +13,9 @@ CARTESIAN_TOPIC = "/cartesian"
 # goal topics
 GOAL_TOPIC = "/goal"
 
+# Camera topics
+DETECTION_TOPIC = "/detections"
+IMAGE_TOPIC = "/camera_image"
 
 # misc constants
 QOS = 10  # quality of service, used when creating publishers/subscribers
