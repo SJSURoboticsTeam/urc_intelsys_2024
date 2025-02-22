@@ -1,13 +1,13 @@
 import rclpy
 from rclpy.node import Node
-from .camera_localizer import CameraLocalizer, CameraLocalizerDetection
+from .camera_localizer import CameraLocalizer
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Image
 from threading import Thread
 import imageio
-import numpy as np
 import cv2
 from cv_bridge import CvBridge
+from constants import QOS, IMAGE_TOPIC, DETECTION_TOPIC
 import os
 from glob import glob
 import time
@@ -17,8 +17,26 @@ from ament_index_python.packages import get_package_share_directory
 class CameraLocalizerNode(Node):
     def __init__(self):
         super().__init__("camera_localizer_node")
-        self.publisher_ = self.create_publisher(Float32MultiArray, "detections", 10)
-        self.image_publisher_ = self.create_publisher(Image, "camera_image", 10)
+        self.declare_parameters(
+            "",
+            [
+                ("debug_save_gifs", False),  # set to False to disable GIF saving
+                ("debug_save_gifs_interval", 5.0),  # how often to save GIFs, in seconds
+                (  # max number of GIFs to have saved at a time
+                    "debug_save_gifs_max_gifs",
+                    10,
+                ),
+                (  # full path to where to save GIFs; must be provided if save_gifs is True
+                    "debug_save_gifs_save_dir",
+                    "",
+                ),
+                ("debug_save_gifs_frames", 30),  # frames per GIF
+                ("update_frequency", 10.0),  # update frequency, in Hz. Must be positive
+            ],
+        )
+
+        self.publisher_ = self.create_publisher(Float32MultiArray, DETECTION_TOPIC, QOS)
+        self.image_publisher_ = self.create_publisher(Image, IMAGE_TOPIC, QOS)
         self.bridge = CvBridge()
 
         # Initialize CameraLocalizer
@@ -42,21 +60,21 @@ class CameraLocalizerNode(Node):
         self.camera_thread = Thread(target=self.run_camera_localizer)
         self.camera_thread.start()
 
-        self.debug_save_gifs = True  # Set to False to disable GIF saving
+        self.debug_save_gifs = self.get_parameter("debug_save_gifs").value
         # Initialize GIF-related variables only if debug is enabled
         if self.debug_save_gifs:
             self.frame_buffer = []
-            self.max_frames = 30  # Number of frames to store for GIF
-            self.save_dir = (
-                "/home/index-finger/Source/SJSU_Robotics/urc_intelsys_2024/camera_gifs"
-            )
+            self.max_frames = self.get_parameter("debug_save_gifs_frames").value
+            self.save_dir = self.get_parameter("debug_save_gifs_save_dir").value
             os.makedirs(self.save_dir, exist_ok=True)
             self.last_save_time = time.time()
-            self.save_interval = 5.0  # Save GIF every 5 seconds
-            self.max_gifs = 10  # Maximum number of GIFs to keep
+            self.save_interval = self.get_parameter("debug_save_gifs_interval").value
+            self.max_gifs = self.get_parameter("debug_save_gifs_max_gifs").value
 
         # Create timer to call timer_callback periodically
-        self.timer = self.create_timer(0.1, self.timer_callback)  # 10Hz timer
+        self.timer = self.create_timer(
+            1.0 / self.get_parameter("update_frequency").value, self.timer_callback
+        )
 
     def cleanup_old_gifs(self):
         """Keep only the most recent GIFs"""
@@ -194,10 +212,7 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        print("Shutting down camera localizer")
 
 
 if __name__ == "__main__":
