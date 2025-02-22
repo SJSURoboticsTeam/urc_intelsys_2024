@@ -11,7 +11,7 @@ class CartesianPublisher(Node):
         self.publisher_ = self.create_publisher(CART, CARTESIAN_TOPIC, 10)
 
         # use the GeoToCart service
-        self.cli = self.create_client(GeoToCart, 'geo_to_cart')
+        self.cli = self.create_client(GeoToCart, "geo_to_cart")
         self.req = GeoToCart.Request()
 
         # subscribe to gps message
@@ -19,7 +19,7 @@ class CartesianPublisher(Node):
             GPS, GPS_TOPIC, self.listener_callback, 10
         )
         self.subscription  # prevent unused variable warning
-        
+
     def listener_callback(self, msg: GPS):
         self.req.inp = msg
         future = self.cli.call_async(self.req)

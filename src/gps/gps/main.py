@@ -29,10 +29,12 @@ class GPSRunner(Node):
         gps_publish_seconds = self.get_parameter("gps_publish_seconds").value
         self.gps_publisher = self.create_publisher(GPS, GPS_TOPIC, QOS)
 
-        self.gps_timer = self.create_timer(
-            gps_publish_seconds,
-            lambda: self.gps_publisher.publish(self.gps.get_cur_gps()),
-        )
+        self.gps_timer = self.create_timer(gps_publish_seconds, self.publish)
+
+    def publish(self):
+        gps = self.gps.get_cur_gps()
+        self.get_logger().info(f"Publishing GPS coordinate {gps}")
+        self.gps_publisher.publish(gps)
 
 
 def main(args=None):

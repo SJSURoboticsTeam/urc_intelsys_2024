@@ -5,10 +5,12 @@ GeoToCart service request
 Ex: https://docs.ros.org/en/crystal/Tutorials/Writing-A-Simple-Py-Service-And-Client.html
 
 """
+
 import rclpy
 from rclpy.node import Node
 from urc_intelsys_2024_msgs.srv import GeoToCart
 import math
+
 
 class GeoToCartHandler(Node):
     def __init__(self):
@@ -30,8 +32,10 @@ class GeoToCartHandler(Node):
         long_rad = self.deg_to_rad(self.get_parameter("ref_longitude").value)
 
         self.x_ref, self.y_ref, self.z_ref = self.gnss_to_ecef(lat_rad, long_rad)
-        
-        self.srv = self.create_service(GeoToCart, "geo_to_cart", self.geo_to_cart_callback)
+
+        self.srv = self.create_service(
+            GeoToCart, "geo_to_cart", self.geo_to_cart_callback
+        )
         self.srv  # prevent unused
 
     def deg_to_rad(self, deg):
@@ -62,7 +66,7 @@ class GeoToCartHandler(Node):
 
         return (e, n)
 
-    def gnss_to_cart(self, lat: float, long:float) -> tuple[float, float]:
+    def gnss_to_cart(self, lat: float, long: float) -> tuple[float, float]:
         """
         Transforms a given (lat, long) pair, in radians,
         into a cartesian (x, y) pair (relative to the configured reference point)
@@ -70,7 +74,7 @@ class GeoToCartHandler(Node):
         Args:
             lat (float): the latitude, in radians
             long (float): the longitude, in radians
-        
+
         Returns:
             out (tuple[float, float]): a pair containing (x, y) in meters
         """
@@ -89,8 +93,11 @@ class GeoToCartHandler(Node):
         See urc_intelsys_2024_msgs/srv/GeoToCart.srv
         """
         print("in service geo_to_cart callback")
-        response.out.x, response.out.y = self.gnss_to_cart(request.inp.latitude, request.inp.longitude)
+        response.out.x, response.out.y = self.gnss_to_cart(
+            request.inp.latitude, request.inp.longitude
+        )
         return response
+
 
 def main(args=None):
     rclpy.init(args=args)
