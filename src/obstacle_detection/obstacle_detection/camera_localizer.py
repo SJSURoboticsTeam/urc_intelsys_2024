@@ -6,13 +6,15 @@ import threading
 import time
 import cv2
 from dataclasses import dataclass
+import math
 
 
 @dataclass
 class CameraLocalizerDetection:
-    angle: float
-    height: float
-    distance: float
+    angle: float  # horizontal angle from center of camera, in degrees
+    height: float  # height, in mm
+    width: float  # width, in mm
+    distance: float  # distance from camera
     xmin: float
     xmax: float
     ymin: float
@@ -20,7 +22,7 @@ class CameraLocalizerDetection:
     spatial_x: float
     spatial_y: float
     spatial_z: float
-    confidence: float
+    confidence: float  # [0, 1]
 
 
 class CameraLocalizer:
@@ -28,6 +30,8 @@ class CameraLocalizer:
 
     def __init__(
         self,
+        hfov: float,
+        vfov: float,
         model_path: str,
         openvino_version: dai.OpenVINO.Version = dai.OpenVINO.VERSION_2022_1,
     ) -> None:
@@ -35,9 +39,14 @@ class CameraLocalizer:
         Initializes the CameraLocalizer
 
         Arguments:
+            - hfov: str - the horizontal angular field of view, in degrees
+            - vfov: str - the vertical angular field of view, in degrees
             - model_path: str - the relative path of the blob model
             - openvino_version: dai.OpenVINO.Version - the version to use for loading the openvino model
         """
+
+        self.hfov = hfov
+        self.vfov = vfov
         self.openvino_version = openvino_version
 
         # Store blob path
@@ -291,13 +300,16 @@ class CameraLocalizer:
                         np.arctan2(detection.spatialCoordinates.y, dep) * 180 / np.pi
                     )
 
-                    # DFOV / HFOV / VFOV = 120° / 95° / 70°
-                    # FOV = 2 x working distance x tan (AFOV/2) - somehow this gives 2* what we need, so ignore 2x
+                    # FOV (in m) = 2 x working distance x tan (AFOV/2)
+                    # AFOV = angular field of view, in radians
                     dist = detection.spatialCoordinates.z  # in mm
-                    deg2rad = np.pi / 180
-                    vfov = np.tan(70 * deg2rad) * dist  # in mm
-                    hPercent = (ymax - ymin) / frame.shape[1]  # px / px = percent
-                    h = hPercent * vfov
+                    vfov = 2 * np.tan(math.radians(self.vfov) / 2) * dist  # in mm
+                    vPercent = (ymax - ymin) / frame.shape[1]  # px / px = percent
+                    h = vPercent * vfov
+                    # repeat to calculate width
+                    hfov = 2 * np.tan(math.radians(self.hfov) / 2) * dist
+                    hPercent = (xmax - xmin) / frame.shape[0]  # px/px = percent
+                    w = hPercent * hfov
 
                     # only visualize if running in blocking mode
                     if self.blocking:
@@ -337,6 +349,7 @@ class CameraLocalizer:
                                 f"H*: {int(horizontal_angle)} deg",
                                 f"V*: {int(vertical_angle)} deg",
                                 f"HE: {int(h)} mm",  # height in mm; max we can roll over is ~130mm
+                                f"W: {int(w)} mm",  # width in mm
                             ]
                         )
 
@@ -353,10 +366,9 @@ class CameraLocalizer:
                                 + detection.spatialCoordinates.z**2
                             )
                             dec = CameraLocalizerDetection(
-                                np.arctan2(detection.spatialCoordinates.x, dep)
-                                * 180
-                                / np.pi,
-                                h,
+                                angle=horizontal_angle,
+                                height=h,
+                                width=w,
                                 distance=xz_dist,
                                 xmin=detection.xmin,
                                 xmax=detection.xmax,

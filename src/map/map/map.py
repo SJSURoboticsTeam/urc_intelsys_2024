@@ -1,7 +1,16 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
-from constants import MAP_TOPIC, QOS
+from constants import (
+    MAP_TOPIC,
+    QOS,
+    COMPASS_TOPIC,
+    CARTESIAN_TOPIC,
+    DETECTION_TOPIC,
+)
+from geometry_msgs.msg import Quaternion
+from urc_intelsys_2024_msgs.msg import CART
+from std_msgs.msg import Float32MultiArray
 
 
 class MapNode(Node):
@@ -34,6 +43,31 @@ class MapNode(Node):
             self.get_parameter("map_publish_seconds").value,
             lambda: self.publisher.publish(self.get_map()),
         )
+
+        # in order to track where we are so that we can properly
+        # update the map when we receive detections
+        self.create_subscription(Quaternion, COMPASS_TOPIC, self.compass_callback, QOS)
+        self.create_subscription(CART, CARTESIAN_TOPIC, self.cart_callback, QOS)
+        self.orientation = None
+        self.cart = None
+        # actually listen to detections
+        self.create_subscription(
+            Float32MultiArray, DETECTION_TOPIC, self.handle_detections, QOS
+        )
+
+    def compass_callback(self, orientation: Quaternion):
+        self.orientation = orientation
+
+    def cart_callback(self, cartesian: CART):
+        self.cart = cartesian
+
+    def handle_detections(self, detections: Float32MultiArray):
+        stride = detections.layout.dim[1].stride
+        num_detections = len(detections.data) // stride
+        for i in range(num_detections):
+            # place obstacles
+            angle, height, width, distance = detections[i * stride : (i + 1) * stride]
+            # TODO - place the obstacles, based on current cart and orientation
 
     def get_map(self):
         grid = OccupancyGrid()

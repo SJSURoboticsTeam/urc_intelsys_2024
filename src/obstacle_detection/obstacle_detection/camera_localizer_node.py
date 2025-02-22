@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from .camera_localizer import CameraLocalizer
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, MultiArrayDimension
 from sensor_msgs.msg import Image
 from threading import Thread
 import imageio
@@ -32,6 +32,8 @@ class CameraLocalizerNode(Node):
                 ),
                 ("debug_save_gifs_frames", 30),  # frames per GIF
                 ("update_frequency", 10.0),  # update frequency, in Hz. Must be positive
+                ("horizontal_fov", 95.0),  # horizontal field of view, in degrees
+                ("vertical_fov", 70.0),  # vertical field of view, in degrees
             ],
         )
 
@@ -54,7 +56,11 @@ class CameraLocalizerNode(Node):
         model_path = blob_files[0]
         self.get_logger().info(f"Using model: {model_path}")
 
-        self.camera_localizer = CameraLocalizer(model_path=model_path)
+        self.camera_localizer = CameraLocalizer(
+            hfov=self.get_parameter("horizontal_fov").value,
+            vfov=self.get_parameter("vertical_fov").value,
+            model_path=model_path,
+        )
 
         # Start the camera in a separate thread
         self.camera_thread = Thread(target=self.run_camera_localizer)
@@ -132,6 +138,7 @@ class CameraLocalizerNode(Node):
                     f"Z: {int(detection.spatial_z)} mm",
                     f"H*: {int(detection.angle)} deg",
                     f"HE: {int(detection.height)} mm",
+                    f"W: {int(detection.width)} mm",
                 ]
 
                 for idx, text in enumerate(texts):
@@ -196,9 +203,23 @@ class CameraLocalizerNode(Node):
             self.image_publisher_.publish(image_msg)
 
             # Publish detection data
+            data = []
             for detection in detections:
+                data.extend(
+                    [
+                        detection.angle,
+                        detection.height,
+                        detection.width,
+                        detection.distance,
+                    ]
+                )
+            if data:
                 msg = Float32MultiArray()
-                msg.data = [detection.angle, detection.height, detection.distance]
+                msg.data = data
+                msg.layout.data_offset = 0
+                msg.layout.dim = [MultiArrayDimension(), MultiArrayDimension()]
+                msg.layout.dim[0].stride = len(data)
+                msg.layout.dim[1].stride = 4  # angle, height, width, distance
                 self.publisher_.publish(msg)
 
     def destroy_node(self):
