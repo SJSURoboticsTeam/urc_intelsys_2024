@@ -20,7 +20,6 @@ class PathfinderListener(Node):
         )
 
 
-
 def main():
     rclpy.init()
     try:
