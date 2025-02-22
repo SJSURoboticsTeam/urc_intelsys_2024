@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = "control"
+package_name = "map"
 
 setup(
     name=package_name,
@@ -14,10 +14,10 @@ setup(
     zip_safe=True,
     maintainer="SJSU Robotics Team",
     maintainer_email="christopher.e.hall@sjsu.edu",
-    description="URC Intelsys 2024 Control",
+    description="URC Intelsys 2024 map",
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["task_manager = control.TaskManager:main"],
+        "console_scripts": ["map = map.map:main", "worldframe = map.worldframe:main"],
     },
 )

@@ -27,6 +27,7 @@ endif()
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/CART.msg"
   "msg/GPS.msg"
   "msg/GPSNavDetails.msg"
   "msg/ObjectNavDetails.msg"
@@ -36,6 +37,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/TGPSNavDetails.msg"
   "msg/TPolarCoordinate.msg"
   "msg/TTask.msg"
+  # services
+  "srv/GeoToCart.srv"
+  "srv/GPSDistance.srv"
 
   DEPENDENCIES std_msgs
 )
