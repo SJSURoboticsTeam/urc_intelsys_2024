@@ -51,10 +51,16 @@ class GeoToCartHandler(Node):
         long_rad = self.deg_to_rad(long)
 
         R = 6378137
-        x = 2 * R * math.asin(math.cos(self.ref_lat_rad) 
-            * math.sin((long_rad - self.ref_long_rad) / 2))
+        x = (
+            2
+            * R
+            * math.asin(
+                math.cos(self.ref_lat_rad)
+                * math.sin((long_rad - self.ref_long_rad) / 2)
+            )
+        )
         y = R * (lat_rad - self.ref_lat_rad)
-        
+
         return x, y
 
     def geo_to_cart_callback(self, request, response):
