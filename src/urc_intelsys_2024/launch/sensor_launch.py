@@ -36,6 +36,9 @@ def generate_launch_description():  # all launch files need a function with this
         package="control", executable="task_manager", parameters=[config]
     )
 
+    path_finder_node = Node(
+        package="pathfinder", executable="path_publisher", parameters=[config]
+    )
     # create launch description for the luxonis depthai ros driver
     # camera_launch = IncludeLaunchDescription(
     #     PythonLaunchDescriptionSource(
@@ -66,6 +69,7 @@ def generate_launch_description():  # all launch files need a function with this
             # control package nodes
             task_manager_node,
             # camera_launch,
+            path_finder_node,
             camera_localizer_node,
         ]
     )
