@@ -10,10 +10,12 @@ def generate_launch_description():  # all launch files need a function with this
     # create nodes
     # can't use the value in the parameter until we return the launch description.
     # thus, the lists, allow us to say "substitute `compass_type` with the actual value at runtime"
+    # compass
     compass_node = Node(package="compass", executable="compass", parameters=[config])
     quaternion_compass_node = Node(
         package="compass", executable="quaternion_publisher", parameters=[config]
     )
+    # gps
     gps_node = Node(package="gps", executable="gps", parameters=[config])
     geo_to_cart_node = Node(
         package="gps", executable="geo_to_cart", parameters=[config]
@@ -44,6 +46,12 @@ def generate_launch_description():  # all launch files need a function with this
     #         + "/launch/camera.launch.py"
     #     ),
     # )
+    camera_localizer_node = Node(
+        package="obstacle_detection",
+        executable="camera_localizer_node",
+        name="camera_localizer",
+        parameters=[config],
+    )
 
     return LaunchDescription(
         [
@@ -62,5 +70,6 @@ def generate_launch_description():  # all launch files need a function with this
             task_manager_node,
             # camera_launch,
             path_finder_node,
+            camera_localizer_node,
         ]
     )
