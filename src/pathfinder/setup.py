@@ -18,8 +18,6 @@ setup(
     license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [
-            "path_publisher=pathfinder.pathfinder_publisher:main"
-        ],
+        "console_scripts": ["path_publisher=pathfinder.pathfinder_publisher:main"],
     },
 )

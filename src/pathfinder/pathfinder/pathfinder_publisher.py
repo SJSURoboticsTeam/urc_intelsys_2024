@@ -8,13 +8,14 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import Pose, Point, PoseStamped
 import numpy as np
 
+
 class PathfinderPublisher(Node):
     def __init__(self):
         super().__init__("pathfinder_publisher")
 
         self.create_subscription(OccupancyGrid, MAP_TOPIC, self.default_callback, 10)
         self.create_subscription(Float64, GOAL_TOPIC, self.default_callback, 10)
-        self.create_subscription(CART, CARTESIAN_TOPIC,self.default_callback, 10)
+        self.create_subscription(CART, CARTESIAN_TOPIC, self.default_callback, 10)
 
         self.publisher_ = self.create_publisher(Path, "pathfinder_topic", 10)
         self.occupancy_grid = None
@@ -22,16 +23,16 @@ class PathfinderPublisher(Node):
         self.start = None
 
     def default_callback(self, msg):
-        #the actual pathfinding algorithm
-
+        # the actual pathfinding algorithm
 
         path = self.a_star(msg.data)
         path = Path()
-        pose_stamped  = PoseStamped()
+        pose_stamped = PoseStamped()
         temp = OccupancyGrid()
         self.publisher_.publish(path)
 
         self.get_logger().info(f'Publishing Path: "{path}"')
+
     def map_callback(self, msg):
         self.occupancy_grid = msg
 
@@ -49,7 +50,10 @@ class PathfinderPublisher(Node):
         width = occupancy_grid.info.width
         height = occupancy_grid.info.height
         resolution = occupancy_grid.info.resolution
-        origin = (occupancy_grid.info.origin.position.x, occupancy_grid.info.origin.position.y)
+        origin = (
+            occupancy_grid.info.origin.position.x,
+            occupancy_grid.info.origin.position.y,
+        )
         grid = np.array(occupancy_grid.data).reshape((height, width))
 
         def world_to_grid(world_x, world_y):
@@ -100,11 +104,13 @@ class PathfinderPublisher(Node):
                 if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal_grid)
+                    f_score[neighbor] = tentative_g_score + heuristic(
+                        neighbor, goal_grid
+                    )
                     heapq.heappush(open_set, (f_score[neighbor], neighbor))
 
         return []  # No path found
-    
+
     def publish_path(self, path_points):
         path_msg = Path()
         path_msg.header.stamp = self.get_clock().now().to_msg()
@@ -120,20 +126,24 @@ class PathfinderPublisher(Node):
 
         self.publisher_.publish(path_msg)
         self.get_logger().info("Publishing Path")
+
+
 def generate_large_grid(size=4000, obstacle_prob=0.3):
-        """
-        Generates a large grid with obstacles.
-        0 = free space, 1 = obstacle.
-        """
-        grid = np.random.choice([0, 1], size=(size, size), p=[1-obstacle_prob, obstacle_prob])
-        return grid
+    """
+    Generates a large grid with obstacles.
+    0 = free space, 1 = obstacle.
+    """
+    grid = np.random.choice(
+        [0, 1], size=(size, size), p=[1 - obstacle_prob, obstacle_prob]
+    )
+    return grid
 
 
 size = 4000
 grid = generate_large_grid(size=size, obstacle_prob=0.3)
 
 start = (0, 0)
-goal = (size-1, size-1)
+goal = (size - 1, size - 1)
 
 print("Running optimized A* on a 4000x4000 grid...")
 start_time = time.time()
@@ -144,6 +154,7 @@ if path:
     print(f"Path found! Length: {len(path)}")
 else:
     print("No path found.")
+
 
 def main(args=None):
     rclpy.init(args=args)
