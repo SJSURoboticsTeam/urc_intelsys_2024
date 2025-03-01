@@ -1,6 +1,3 @@
-# imports manage them + remove stuff from main - eliot
-# get right message types for subscriptions, and proper callbacks for each - japji
-# add type annotations to a* algorithm and make it work with the information we have - alex start
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
