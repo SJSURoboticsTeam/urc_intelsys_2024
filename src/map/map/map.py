@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
-from constants import MAP_TOPIC, QOS
+from constants import MAP_TOPIC, QOS, DEFAULT_FRAME
 
 
 class MapNode(Node):
@@ -13,7 +13,7 @@ class MapNode(Node):
                 ("width", 100),
                 ("height", 100),
                 ("map_publish_seconds", 1.0),
-                ("frame_id", "world"),
+                ("frame_id", DEFAULT_FRAME),
             ],
         )
 

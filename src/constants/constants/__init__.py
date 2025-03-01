@@ -13,7 +13,10 @@ CARTESIAN_TOPIC = "/cartesian"
 # goal topics
 GOAL_TOPIC = "/goal"
 
+# PATH TOPIC
+PATH_TOPIC = "/path"
 
+DEFAULT_FRAME = "world"
 # misc constants
 QOS = 10  # quality of service, used when creating publishers/subscribers
 
