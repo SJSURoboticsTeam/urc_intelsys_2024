@@ -66,7 +66,7 @@ class CameraLocalizerNode(Node):
             self.frame_buffer = []
             self.max_frames = self.get_parameter("debug_save_gifs_frames").value
             self.save_dir = self.get_parameter("debug_save_gifs_save_dir").value
-            
+
             # Check if save_dir is empty and provide a default if needed
             if not self.save_dir:
                 # Use a directory in the package's share directory
@@ -75,7 +75,7 @@ class CameraLocalizerNode(Node):
                 self.get_logger().warning(
                     f"No save directory provided for GIFs. Using default: {self.save_dir}"
                 )
-            
+
             os.makedirs(self.save_dir, exist_ok=True)
             self.last_save_time = time.time()
             self.save_interval = self.get_parameter("debug_save_gifs_interval").value
@@ -210,17 +210,17 @@ class CameraLocalizerNode(Node):
                 # Create a more comprehensive message with all spatial data
                 msg = Float32MultiArray()
                 msg.data = [
-                    detection.angle,           # Horizontal angle in degrees
-                    detection.height,          # Height in mm
-                    detection.distance,        # Distance in mm
-                    detection.spatial_x,       # X coordinate in mm
-                    detection.spatial_y,       # Y coordinate in mm
-                    detection.spatial_z,       # Z coordinate in mm
-                    detection.confidence,      # Detection confidence
-                    detection.xmin,            # Normalized bounding box min x
-                    detection.xmax,            # Normalized bounding box max x
-                    detection.ymin,            # Normalized bounding box min y
-                    detection.ymax             # Normalized bounding box max y
+                    detection.angle,  # Horizontal angle in degrees
+                    detection.height,  # Height in mm
+                    detection.distance,  # Distance in mm
+                    detection.spatial_x,  # X coordinate in mm
+                    detection.spatial_y,  # Y coordinate in mm
+                    detection.spatial_z,  # Z coordinate in mm
+                    detection.confidence,  # Detection confidence
+                    detection.xmin,  # Normalized bounding box min x
+                    detection.xmax,  # Normalized bounding box max x
+                    detection.ymin,  # Normalized bounding box min y
+                    detection.ymax,  # Normalized bounding box max y
                 ]
                 self.publisher_.publish(msg)
                 self.get_logger().debug(

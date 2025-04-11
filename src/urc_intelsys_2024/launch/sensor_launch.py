@@ -52,7 +52,7 @@ def generate_launch_description():  # all launch files need a function with this
         name="camera_localizer",
         parameters=[config],
     )
-    
+
     obstacle_mapper_node = Node(
         package="obstacle_detection",
         executable="obstacle_mapper",
