@@ -39,6 +39,8 @@ class ObstacleMapper(Node):
             "",
             [
                 ("update_frequency", 10.0),  # Hz
+                ("max_recent_detections", 10),  # Maximum number of recent detections to keep track of
+                ("max_displayed_detections", 3),  # Maximum number of closest detections to display coordinates for
                 ("debug_save_maps", True),  # set to False to disable map saving
                 (
                     "debug_save_maps_interval",
@@ -49,12 +51,6 @@ class ObstacleMapper(Node):
                     10,
                 ),  # max number of maps to have saved at a time
                 ("debug_save_maps_save_dir", "./map_images/"),  # directory to save maps
-                ("default_map_width", 200),  # Width of the default map in grid cells
-                ("default_map_height", 200),  # Height of the default map in grid cells
-                (
-                    "default_map_resolution",
-                    0.1,
-                ),  # Resolution of the default map in meters per cell
             ],
         )
 
@@ -67,14 +63,15 @@ class ObstacleMapper(Node):
         self.map: Optional[OccupancyGrid] = None
         self.map_origin_x: float = 0
         self.map_origin_y: float = 0
-        self.map_resolution: float = 1.0
+        # Initialize map properties
+        self.map_resolution: float = 1.0  # Will be updated when map is received
         self.map_width: int = 0
         self.map_height: int = 0
 
         # Track recent detections for visualization
         self.recent_detections: List[dict] = []
-        self.max_recent_detections: int = 10
-
+        self.max_recent_detections: int = self.get_parameter("max_recent_detections").value
+        
         # Create QoS profile for map publisher
         map_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
@@ -82,10 +79,11 @@ class ObstacleMapper(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1,
         )
-
-        # Define topic for map with obstacles
+        
+        # Define topics
         self.MAP_WITH_OBSTACLES_TOPIC = "/map_with_obstacles"
-
+        self.CLOSEST_DETECTIONS_TOPIC = "/closest_detections"
+        
         # Subscribers
         self.compass_sub = self.create_subscription(
             Float64, COMPASS_TOPIC, self.compass_callback, QOS
@@ -100,16 +98,20 @@ class ObstacleMapper(Node):
         self.map_sub = self.create_subscription(
             OccupancyGrid, MAP_TOPIC, self.map_callback, QOS
         )
-
-        # Publisher
+        
+        # Publishers
         self.map_publisher = self.create_publisher(
             OccupancyGrid, self.MAP_WITH_OBSTACLES_TOPIC, map_qos
         )
-
-        self.get_logger().info(
-            f"Created map publisher on topic: {self.MAP_WITH_OBSTACLES_TOPIC}"
+        
+        self.closest_detections_publisher = self.create_publisher(
+            Float32MultiArray,
+            self.CLOSEST_DETECTIONS_TOPIC,
+            QOS
         )
-
+        
+        self.get_logger().info(f"Created map publisher on topic: {self.MAP_WITH_OBSTACLES_TOPIC}")
+        
         # Create client for GeoToCart service
         self.geo_to_cart_client = self.create_client(GeoToCart, "geo_to_cart")
 
@@ -145,20 +147,19 @@ class ObstacleMapper(Node):
 
             # Create timer for map saving
             self.save_timer = self.create_timer(1.0, self.check_save_map)
-
-            self.get_logger().info(
-                f"Map saving enabled. Maps will be saved to {self.save_dir}"
-            )
-
+            
+            self.get_logger().info(f"Map saving enabled. Maps will be saved to {self.save_dir}")
+        
+        
         self.get_logger().info("ObstacleMapper initialized")
 
     def init_default_map(self) -> None:
-        """Initialize a default map using configuration parameters if none is provided."""
+        """Initialize a default map if none is provided."""
         if self.map is None:
-            width = self.get_parameter("default_map_width").value
-            height = self.get_parameter("default_map_height").value
-            resolution = self.get_parameter("default_map_resolution").value
-
+            width = 200
+            height = 200
+            resolution = 0.1  # 0.1 meters per cell for finer detail
+            
             # Create map message
             default_map = OccupancyGrid()
             default_map.header.stamp = self.get_clock().now().to_msg()
@@ -194,11 +195,38 @@ class ObstacleMapper(Node):
             self.map_resolution = resolution
             self.map_origin_x = default_map.info.origin.position.x
             self.map_origin_y = default_map.info.origin.position.y
-
-            self.get_logger().info(
-                f"Initialized default map from config: {width}x{height}, resolution: {resolution}"
+            
+            self.get_logger().info(f"Initialized default map: {width}x{height}, resolution: {resolution}")
+    def get_closest_detections(self, max_count: int = None) -> list:
+        """Get the closest detections to the robot.
+        
+        Args:
+            max_count: Maximum number of detections to return. If None, uses the max_displayed_detections parameter.
+            
+        Returns:
+            List of detections sorted by distance to robot, limited to max_count.
+        """
+        if not self.recent_detections:
+            return []
+            
+        # If max_count is not provided, use the parameter
+        if max_count is None:
+            max_count = self.get_parameter("max_displayed_detections").value
+            
+        # Get robot position
+        robot_x, robot_y = self.get_robot_map_position()
+        
+        # Calculate distance from robot for each detection
+        for detection in self.recent_detections:
+            detection['distance_to_robot'] = math.sqrt(
+                (detection['x'] - robot_x)**2 +
+                (detection['y'] - robot_y)**2
             )
-
+        
+        # Sort detections by distance to robot and limit to max_count
+        return sorted(self.recent_detections, key=lambda d: d['distance_to_robot'])[:max_count]
+    
+    
     def republish_map(self) -> None:
         """Periodically republish map"""
         # Initialize a default map if needed
@@ -226,11 +254,42 @@ class ObstacleMapper(Node):
 
         # Publish map
         self.map_publisher.publish(updated_map)
-        self.get_logger().info(
-            f"Republished map: {len(updated_map.data)} cells, {occupied_cells} occupied, "
-            f"{free_cells} free, {unknown_cells} unknown"
-        )
-
+        
+        # Publish closest detections
+        self.publish_closest_detections()
+        
+    def publish_closest_detections(self) -> None:
+        """Publish the closest detections to a separate topic."""
+        # Get the closest detections
+        closest_detections = self.get_closest_detections()
+        
+        if not closest_detections:
+            return
+            
+        # Create a Float32MultiArray message
+        msg = Float32MultiArray()
+        
+        # Format: [num_detections, det1_x, det1_y, det1_distance, det2_x, det2_y, det2_distance, ...]
+        data = [float(len(closest_detections))]
+        
+        for detection in closest_detections:
+            # Convert to grid coordinates for easier use by subscribers
+            grid_x = int((detection['x'] - self.map_origin_x) / self.map_resolution)
+            grid_y = int((detection['y'] - self.map_origin_y) / self.map_resolution)
+            
+            # Add detection data to the message
+            data.extend([
+                float(grid_x),
+                float(grid_y),
+                float(detection['distance_to_robot'])
+            ])
+            
+        msg.data = data
+        
+        # Publish the message
+        self.closest_detections_publisher.publish(msg)
+        self.get_logger().debug(f"Published {len(closest_detections)} closest detections")
+    
     def compass_callback(self, msg: Float64) -> None:
         """Update current heading from compass data.
 
@@ -715,18 +774,13 @@ class ObstacleMapper(Node):
             cbar.set_label("Occupancy")
 
             # Add grid
-            plt.grid(which="both", color="lightgray", linestyle="-", alpha=0.5)
-
-            # Add title with timestamp, map info, and heading
-            heading_info = (
-                f"Heading: {self.current_heading:.2f}°"
-                if self.current_heading is not None
-                else "Heading: N/A"
-            )
-            plt.title(
-                f"Map {timestamp}\n{self.map_width}x{self.map_height}, resolution: {self.map_resolution}m\n{heading_info}"
-            )
-
+            plt.grid(which='both', color='lightgray', linestyle='-', alpha=0.5)
+            
+            # Add title with timestamp, map info, heading, and detection count
+            heading_info = f"Heading: {self.current_heading:.2f}°" if self.current_heading is not None else "Heading: N/A"
+            detection_count = f"Detections: {len(self.recent_detections)}" if self.recent_detections else "Detections: 0"
+            plt.title(f"Map {timestamp}\n{self.map_width}x{self.map_height}, resolution: {self.map_resolution}m\n{heading_info} | {detection_count}")
+            
             # Add robot position if available
             robot_x, robot_y = self.get_robot_map_position()
             grid_x = int((robot_x - self.map_origin_x) / self.map_resolution)
@@ -753,20 +807,20 @@ class ObstacleMapper(Node):
 
             # Add detection markers for recent detections
             if self.recent_detections:
+                # Get the number of closest detections to display
+                max_displayed = self.get_parameter("max_displayed_detections").value
+                
+                # Get the closest detections
+                sorted_detections = self.get_closest_detections(max_displayed)
+                
                 # Plot recent detections with different colors based on age
                 for i, detection in enumerate(self.recent_detections):
-                    det_grid_x = int(
-                        (detection["x"] - self.map_origin_x) / self.map_resolution
-                    )
-                    det_grid_y = int(
-                        (detection["y"] - self.map_origin_y) / self.map_resolution
-                    )
-
-                    # Use different marker styles based on detection age
-                    alpha = 0.5 + 0.5 * (
-                        i / len(self.recent_detections)
-                    )  # Newer detections are more opaque
-
+                    det_grid_x = int((detection['x'] - self.map_origin_x) / self.map_resolution)
+                    det_grid_y = int((detection['y'] - self.map_origin_y) / self.map_resolution)
+                    
+                    # Use different marker styles based on age
+                    alpha = 0.5 + 0.5 * (i / len(self.recent_detections))  # Newer detections are more opaque
+                    
                     # Plot detection point
                     plt.plot(det_grid_x, det_grid_y, "r.", markersize=4, alpha=alpha)
 
@@ -780,15 +834,20 @@ class ObstacleMapper(Node):
                             alpha=0.7,
                         )
                         plt.gca().add_patch(circle)
-
-                # Add most recent detection info to the plot
-                latest = self.recent_detections[-1]
-                info_text = f"Latest Detection:\n"
-                info_text += f"Distance: {latest['distance']:.2f}m\n"
-                info_text += f"Height: {latest['height']:.2f}m\n"
-                info_text += f"Radius: {latest['radius']} cells\n"
-                info_text += f"Angle: {latest['angle']:.1f}°"
-
+                
+                # Add detection info to the plot
+                info_text = f"Total Detections: {len(self.recent_detections)}\n\n"
+                info_text += f"{max_displayed} Closest Detections:\n"
+                
+                # Add info for the closest detections (or fewer if there aren't enough)
+                for i, detection in enumerate(sorted_detections[:max_displayed]):
+                    det_grid_x = int((detection['x'] - self.map_origin_x) / self.map_resolution)
+                    det_grid_y = int((detection['y'] - self.map_origin_y) / self.map_resolution)
+                    info_text += f"{i+1}. Grid: ({det_grid_x}, {det_grid_y}), "
+                    info_text += f"Dist: {detection['distance_to_robot']:.2f}m"
+                    if i < len(sorted_detections[:max_displayed]) - 1:
+                        info_text += "\n"
+                
                 # Add text box with detection info
                 plt.figtext(
                     0.02, 0.02, info_text, bbox=dict(facecolor="white", alpha=0.7)
