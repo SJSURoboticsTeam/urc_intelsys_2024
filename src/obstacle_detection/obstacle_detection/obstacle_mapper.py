@@ -35,7 +35,7 @@ class ObstacleMapper(Node):
         super().__init__("obstacle_mapper")
         # Track occupied grid cells to prevent duplicate detections
         self.occupied_grid_cells = set()
-        
+
         # Parameters
         self.declare_parameters(
             "",
@@ -615,17 +615,17 @@ class ObstacleMapper(Node):
         if self.map is None:
             self.get_logger().warn("No map data available")
             return
-            
+
         # Create a unique key for this grid cell
         grid_cell_key = (grid_x, grid_y)
-        
+
         # Check if we've already detected an obstacle at this grid cell
         if grid_cell_key in self.occupied_grid_cells:
             self.get_logger().info(
                 f"Skipping duplicate obstacle detection at grid cell ({grid_x}, {grid_y})"
             )
             return
-            
+
         # Add this grid cell to our set of occupied cells
         self.occupied_grid_cells.add(grid_cell_key)
 
@@ -699,7 +699,7 @@ class ObstacleMapper(Node):
         self.get_logger().info(
             f"Map updated with obstacle at ({grid_x}, {grid_y}), {cells_updated} cells updated"
         )
-        
+
         # Log the total number of unique obstacle cells we're tracking
         self.get_logger().debug(
             f"Now tracking {len(self.occupied_grid_cells)} unique obstacle grid cells"
