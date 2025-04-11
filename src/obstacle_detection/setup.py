@@ -26,6 +26,7 @@ setup(
     entry_points={
         "console_scripts": [
             "camera_localizer_node = obstacle_detection.camera_localizer_node:main",
+            "obstacle_mapper = obstacle_detection.obstacle_mapper:main",
         ],
     },
 )

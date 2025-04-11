@@ -21,3 +21,9 @@ task_manager:
       - '{"goal_latitude": 101.0, "goal_longitude": 101.0}'
       - '{"goal_latitude": 102.0, "goal_longitude": 102.0}'
       - "{}"
+obstacle_mapper:
+  ros__parameters:
+    update_frequency: 10.0  #Hz
+    default_map_width: 200  # Width of the default map in grid cells
+    default_map_height: 200  # Height of the default map in grid cells
+    default_map_resolution: 0.1  # Resolution of the default map in meters per cell
