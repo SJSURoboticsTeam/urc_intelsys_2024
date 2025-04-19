@@ -19,8 +19,8 @@ class GeoToCartHandler(Node):
             namespace="",
             parameters=[
                 # "name", default_value
-                ("ref_latitude", 90),
-                ("ref_longitude", 90),
+                ("ref_latitude", 90.0),
+                ("ref_longitude", 90.0),
             ],
         )
 
@@ -47,6 +47,8 @@ class GeoToCartHandler(Node):
         Returns:
             out (tuple[float, float]): a pair containing (x, y) in meters
         """
+        print("lat", self.get_parameter("ref_latitude"))
+        print("long", self.get_parameter("ref_longitude"))
         lat_rad = self.deg_to_rad(lat)
         long_rad = self.deg_to_rad(long)
 
