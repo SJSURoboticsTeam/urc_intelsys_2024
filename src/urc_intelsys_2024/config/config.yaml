@@ -5,11 +5,11 @@ compass:
 gps:
   ros__parameters:
     gps_publish_seconds: 2.0
-    gps_type: fake
-geo_to_cart:
+    gps_type: actual
+geo_to_cart_handler:
   ros__parameters:
-    ref_latitude: 100
-    ref_longitude: 100
+    ref_latitude: 37.33678616666667
+    ref_longitude: -121.88098083333334
 task_manager:
   ros__parameters:
     task_types:
