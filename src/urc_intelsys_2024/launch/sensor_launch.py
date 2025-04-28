@@ -53,6 +53,13 @@ def generate_launch_description():  # all launch files need a function with this
         parameters=[config],
     )
 
+    obstacle_mapper_node = Node(
+        package="obstacle_detection",
+        executable="obstacle_mapper",
+        name="obstacle_mapper",
+        parameters=[config],
+    )
+
     return LaunchDescription(
         [
             # gps package nodes
@@ -71,5 +78,6 @@ def generate_launch_description():  # all launch files need a function with this
             # camera_launch,
             path_finder_node,
             camera_localizer_node,
+            obstacle_mapper_node,
         ]
     )

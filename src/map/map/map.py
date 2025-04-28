@@ -12,6 +12,7 @@ class MapNode(Node):
             [
                 ("width", 100),
                 ("height", 100),
+                ("resolution", 0.1),  # Resolution of the map in meters per cell
                 ("map_publish_seconds", 1.0),
                 ("frame_id", DEFAULT_FRAME),
             ],
@@ -20,6 +21,7 @@ class MapNode(Node):
         self.publisher = self.create_publisher(OccupancyGrid, MAP_TOPIC, QOS)
         self.width = self.get_parameter("width").value
         self.height = self.get_parameter("height").value
+        self.resolution = self.get_parameter("resolution").value
         self.frame_id = self.get_parameter("frame_id").value
         self.data = [0] * (self.width * self.height)
         self.data[0 * self.width + 1] = 0
@@ -43,7 +45,7 @@ class MapNode(Node):
         grid.info.height = self.height
         grid.info.width = self.width
         grid.info.map_load_time = self.get_clock().now().to_msg()
-        grid.info.resolution = 1.0
+        grid.info.resolution = self.resolution
         grid.header.frame_id = self.frame_id
         grid.header.stamp = self.get_clock().now().to_msg()
 

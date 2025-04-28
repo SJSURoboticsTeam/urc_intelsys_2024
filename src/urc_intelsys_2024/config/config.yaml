@@ -21,3 +21,15 @@ task_manager:
       - '{"goal_latitude": 101.0, "goal_longitude": 101.0}'
       - '{"goal_latitude": 102.0, "goal_longitude": 102.0}'
       - "{}"
+map:
+  ros__parameters:
+    width: 200  # Width of the map in grid cells
+    height: 200  # Height of the map in grid cells
+    resolution: 0.05  # Resolution of the map in meters per cell
+    map_publish_seconds: 1.0  # How often to publish the map, in seconds
+
+obstacle_mapper:
+  ros__parameters:
+    update_frequency: 10.0  #Hz
+    max_recent_detections: 1000  # number of recent detections to keep track of
+    max_displayed_detections: 15  # number of closest detections to display coordinates for
