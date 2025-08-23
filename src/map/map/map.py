@@ -8,7 +8,6 @@ from constants import (
     CARTESIAN_TOPIC,
     DETECTION_TOPIC,
 )
-from geometry_msgs.msg import Quaternion
 from std_msgs.msg import Float64
 from urc_intelsys_2024_msgs.msg import CART
 from std_msgs.msg import Float32MultiArray
@@ -27,7 +26,6 @@ class MapNode(Node):
                 ("frame_id", "world"),
             ],
         )
-
 
         self.publisher = self.create_publisher(OccupancyGrid, MAP_TOPIC, QOS)
         self.width = self.get_parameter("width").value
@@ -50,10 +48,10 @@ class MapNode(Node):
         # in order to track where we are so that we can properly
         # update the map when we receive detections
 
-        #listen to COMPAS_TOPIC to get raw angle
+        # listen to COMPAS_TOPIC to get raw angle
         self.create_subscription(Float64, COMPASS_TOPIC, self.compass_callback, QOS)
-        #self.create_subscription(Quaternion, COMPASS_TOPIC, self.compass_callback, QOS)
-        
+        # self.create_subscription(Quaternion, COMPASS_TOPIC, self.compass_callback, QOS)
+
         self.create_subscription(CART, CARTESIAN_TOPIC, self.cart_callback, QOS)
         self.orientation = None
         self.cart = None
@@ -63,7 +61,7 @@ class MapNode(Node):
         )
 
     def compass_callback(self, orientation: Float64):
-        self.orientation = orientation
+        self.orientation = orientation.data
 
     def cart_callback(self, cartesian: CART):
         self.cart = cartesian
@@ -73,31 +71,39 @@ class MapNode(Node):
         num_detections = len(detections.data) // stride
         for i in range(num_detections):
             # place obstacles
-            confidence, angle, height, width, distance = detections[i * stride : (i + 1) * stride]
+            confidence, angle, height, width, distance = detections.data[
+                i * stride : (i + 1) * stride
+            ]
             # place the obstacles, based on current cart and orientation
             # combine current angle with the detection angle
             # both are in degrees, so we can just add
+            # TODO - distance is in mm, not meters
             combined_angle = angle + self.orientation
-            self.get_logger().info(f"We have {confidence} {angle} {height} {width} {distance} and combined {combined_angle}")
+            self.get_logger().info(
+                f"We have {confidence} {angle} {height} {width} {distance} and combined {combined_angle}"
+            )
             # after that, we would use distance as the hypotenuse of a triangle and then
             # figure out what the distance in terms of x and y would be
             # TODO - account for height and width
-            x_increment, y_increment = self.get_cartesian_distance(combined_angle, distance)  
+            x_increment, y_increment = self.get_cartesian_distance(
+                combined_angle, distance
+            )
             # then finally, add those to our current cartesian position
             x_obstacle = self.cart.x + x_increment
             y_obstacle = self.cart.y + y_increment
             # mark that cell in our grid as an obstacle w/ {confidence} confidence
+            self.get_logger().info("x: %s, y: %s" % (x_obstacle, y_obstacle))
+            # TODO - scale confidence by 100
             self.set_grid(x_obstacle, y_obstacle, confidence)
 
-    def set_grid(self, row: int, col: int, value: float):
-        self.data[row*self.width + col] = value        
-    
+    def set_grid(self, row: int | float, col: int | float, value: float):
+        self.data[int(row) * self.width + int(col)] = value
+
     def get_cartesian_distance(self, angle: float, distance: float):
         # convert from the polar (angle, distance) to the cartesian
         x = distance * math.cos(angle)
         y = distance * math.sin(angle)
         return x, y
-        
 
     def get_map(self):
         grid = OccupancyGrid()
@@ -113,7 +119,6 @@ class MapNode(Node):
 
         # send
         return grid
-    
 
 
 def main(args=None):
