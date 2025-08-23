@@ -207,6 +207,7 @@ class CameraLocalizerNode(Node):
             for detection in detections:
                 data.extend(
                     [
+                        detection.confidence,
                         detection.angle,
                         detection.height,
                         detection.width,
@@ -219,7 +220,7 @@ class CameraLocalizerNode(Node):
                 msg.layout.data_offset = 0
                 msg.layout.dim = [MultiArrayDimension(), MultiArrayDimension()]
                 msg.layout.dim[0].stride = len(data)
-                msg.layout.dim[1].stride = 4  # angle, height, width, distance
+                msg.layout.dim[1].stride = 5  # confidence, angle, height, width, distance
                 self.publisher_.publish(msg)
 
     def destroy_node(self):
