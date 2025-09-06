@@ -79,12 +79,21 @@ class MapNode(Node):
             # both are in degrees, so we can just add
             # TODO - distance is in mm, not meters
             combined_angle = angle + self.orientation
+
+            #scale confidence by 100
+            confidence = confidence *100
+            #convert distance, height, and width from mm to meters
+            distance = distance/100
+            height = height/100
+            width = width/100
+
             self.get_logger().info(
                 f"We have {confidence} {angle} {height} {width} {distance} and combined {combined_angle}"
             )
             # after that, we would use distance as the hypotenuse of a triangle and then
             # figure out what the distance in terms of x and y would be
             # TODO - account for height and width
+            
             x_increment, y_increment = self.get_cartesian_distance(
                 combined_angle, distance
             )
@@ -94,7 +103,12 @@ class MapNode(Node):
             # mark that cell in our grid as an obstacle w/ {confidence} confidence
             self.get_logger().info("x: %s, y: %s" % (x_obstacle, y_obstacle))
             # TODO - scale confidence by 100
-            self.set_grid(x_obstacle, y_obstacle, confidence)
+            #self.set_grid(x_obstacle, y_obstacle, confidence)
+            #convert height and width from float to integers
+            for i in range((int)(height)):
+                for j in range((int)(width)):
+                    self.set_grid(x_obstacle+j, y_obstacle+i, confidence)
+            
 
     def set_grid(self, row: int | float, col: int | float, value: float):
         self.data[int(row) * self.width + int(col)] = value
