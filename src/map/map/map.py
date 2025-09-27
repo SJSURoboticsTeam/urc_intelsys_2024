@@ -111,7 +111,7 @@ class MapNode(Node):
             
 
     def set_grid(self, row: int | float, col: int | float, value: float):
-        self.data[int(row) * self.width + int(col)] = value
+        self.data[int(row) * self.width + int(col)] = int(value)
 
     def get_cartesian_distance(self, angle: float, distance: float):
         # convert from the polar (angle, distance) to the cartesian
