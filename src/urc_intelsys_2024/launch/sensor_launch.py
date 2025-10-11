@@ -14,7 +14,7 @@ def generate_launch_description():  # all launch files need a function with this
     compass_node = Node(package="compass", executable="compass", parameters=[config])
     quaternion_compass_node = Node(
         package="compass", executable="quaternion_publisher", parameters=[config]
-    )
+    )    
     # gps
     gps_node = Node(package="gps", executable="gps", parameters=[config])
     geo_to_cart_node = Node(

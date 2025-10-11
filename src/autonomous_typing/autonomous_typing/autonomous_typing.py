@@ -10,14 +10,14 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 
-class KeyboardAlignment(Node):
+class AutonomousTyping(Node):
     def __init__(self):
-        super().__init__("keyboard_alignment")
+        super().__init__("autonomous_typing")
 
         #subscribes to IMAGE_TOPIC
         self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
         #publishes PoseStamped message??
-        #self.publisher_ = self.create_publisher(PoseStamped, "keyboard_alignment_topic", QOS)
+        #self.publisher_ = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
 
         #allows for you to have access to template image
         package_share_dir = get_package_share_directory("autonomous_typing")
@@ -32,11 +32,11 @@ class KeyboardAlignment(Node):
             self.get_logger().error(f"Failed to load template image: {TEMPLATE_IMAGE_PATH}")
             exit(1)
 
-        self.get_logger().info("KeyboardAlignmentNode running")
+        self.get_logger().info("AutonomousTyping running")
 
     def image_callback(self, msg):
         #convert ROS2 Image to OpenCV image --> convert to grayscale
-        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='brg8')
+        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
         #call sift on the frame
@@ -57,7 +57,7 @@ class KeyboardAlignment(Node):
         #TEMPLATE:
         #find keypoints of template image (grayed out version) --> can put a mask
         template_keypoints = sift.detect(self.template, None)
-        self.get_logger.info(f"Number of Template Keypoints: {len(template_keypoints)}")
+        self.get_logger().info(f"Number of Template Keypoints: {len(template_keypoints)}")
         #draw those keypoints --> use flags for better keypoints
         template_image_keypoints = cv2.drawKeypoints(self.template, template_keypoints, None)
         #make a new image with the keypoints on it
@@ -66,7 +66,7 @@ class KeyboardAlignment(Node):
         #FRAME:
         #do the same
         frame_keypoints = sift.detect(gray_frame, None)
-        self.get_logger.info(f"Number of Frame Keypoints: {len(frame_keypoints)}")
+        self.get_logger().info(f"Number of Frame Keypoints: {len(frame_keypoints)}")
         frame_image_keypoints = cv2.drawKeypoints(gray_frame, frame_keypoints, None)
         cv2.imwrite('sift_frame_image_keypoints.jpg', frame_image_keypoints)
         
