@@ -35,12 +35,17 @@ class KeyboardAlignment(Node):
         self.get_logger().info("KeyboardAlignmentNode running")
 
     def image_callback(self, msg):
-        #need to fix msg.data beforehand
-        sift_output = self.sift_detector(msg.data)
-        #corner = self.corner_detection(msg.data)
+        #convert ROS2 Image to OpenCV image --> convert to grayscale
+        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='brg8')
+        gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+
+        #call sift on the frame
+        sift_output = self.sift_detector(gray_image)
+
+        #corner = self.corner_detection(gray_image)
 
         #self.publisher_.publish(sift_output)
-        self.get_logger().info(f'Sift output: "{sift_output}"')
+        #self.get_logger().info(f'Sift output: "{sift_output}"')
 
     def corner_detection(self):
         return
@@ -64,4 +69,5 @@ class KeyboardAlignment(Node):
         self.get_logger.info(f"Number of Frame Keypoints: {len(frame_keypoints)}")
         frame_image_keypoints = cv2.drawKeypoints(gray_frame, frame_keypoints, None)
         cv2.imwrite('sift_frame_image_keypoints.jpg', frame_image_keypoints)
+        
         return
