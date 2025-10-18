@@ -10,7 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/resource', ['resource/template_image.jpg']),  # install image specifically
+        ('share/' + package_name + '/resource', ['resource/full_keyboard_template_image.jpg', 'resource/template_image.jpg']),  # install image specifically
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -8,6 +8,10 @@ from cv_bridge import CvBridge
 import numpy as np
 import os
 from ament_index_python.packages import get_package_share_directory
+from keyboard_typing.template_matching import TemplateMatching
+from keyboard_typing.corner_detection import CornerDetection
+
+
 
 
 class AutonomousTyping(Node):
@@ -21,19 +25,34 @@ class AutonomousTyping(Node):
 
         #allows for you to have access to template image
         package_share_dir = get_package_share_directory("keyboard_typing")
+        FULL_KEYBOARD_IMAGE_PATH = os.path.join(package_share_dir, "resource", "full_keyboard_template_image.jpg")
         TEMPLATE_IMAGE_PATH = os.path.join(package_share_dir, "resource", "template_image.jpg")
 
         #load template image
         self.bridge = CvBridge()
         #use imread so that is loads in grayscale already. --> might need to change if corner detection?
-        self.template = cv2.imread(TEMPLATE_IMAGE_PATH, cv2.IMREAD_GRAYSCALE)
+        self.sift_template = cv2.imread(FULL_KEYBOARD_IMAGE_PATH, cv2.IMREAD_GRAYSCALE)
 
 
-        if self.template is None:
-            self.get_logger().error(f"Failed to load template image: {TEMPLATE_IMAGE_PATH}")
+        if self.sift_template is None:
+            self.get_logger().error(f"Failed to load template image: {FULL_KEYBOARD_IMAGE_PATH}")
             exit(1)
 
         sift_output = self.sift_detector()
+        
+        #for some reason this doesn't work
+        #template_matching_output = TemplateMatching(TEMPLATE_IMAGE_PATH, FULL_KEYBOARD_IMAGE_PATH).template_match()
+
+        #but this does
+        try:
+            template_matching_output = TemplateMatching(TEMPLATE_IMAGE_PATH, FULL_KEYBOARD_IMAGE_PATH)
+            template_matching_output.template_match()
+
+            corner_detection_output = CornerDetection(FULL_KEYBOARD_IMAGE_PATH)
+            corner_detection_output.corner_detect()
+
+        except Exception as e:
+            self.get_logger().error(f"TemplateMatching error: {e}")
 
         self.get_logger().info("AutonomousTyping running")
 
@@ -59,16 +78,12 @@ class AutonomousTyping(Node):
 
         #TEMPLATE:
         #find keypoints of template image (grayed out version) --> can put a mask
-        template_keypoints = sift.detect(self.template, None)
+        template_keypoints = sift.detect(self.sift_template, None)
         self.get_logger().info(f"Number of Template Keypoints: {len(template_keypoints)}")
         #draw those keypoints --> use flags for better keypoints
-        template_image_keypoints = cv2.drawKeypoints(self.template, template_keypoints, None)
+        template_image_keypoints = cv2.drawKeypoints(self.sift_template, template_keypoints, None)
         #make a new image with the keypoints on it
-
-        package_share_dir = get_package_share_directory("keyboard_typing")
-        SIFT_IMAGE_PATH = os.path.join(package_share_dir, "resource", "sift_keypoints_template_image.jpg")
-        cv2.imwrite(SIFT_IMAGE_PATH, template_image_keypoints)
-        #cv2.imwrite('sift_keypoints_template_image.jpg', template_image_keypoints)
+        cv2.imwrite('sift_keypoints_template_image.jpg', template_image_keypoints)
 
         #show image
         #cv2.imshow('SIFT Keypoints', template_image_keypoints)
