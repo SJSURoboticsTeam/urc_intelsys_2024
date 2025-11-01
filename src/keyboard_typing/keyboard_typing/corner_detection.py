@@ -19,26 +19,31 @@ class CornerDetection():
         print("CornerDetection running")
 
     def corner_detect(self):
-        #gray = cv2.cvtColor(self.corner_detection_template, cv2.COLOR_BGR2GRAY)
- 
+        #harris detection
         gray = cv2.cvtColor(self.corner_detection_template, cv2.COLOR_BGR2GRAY)
         gray = np.float32(gray)
-
         dst = cv2.cornerHarris(gray,2,3,0.04)
- 
-        #result is dilated for marking the corners, not important
+        #result is dilated for marking the corners
         dst = cv2.dilate(dst,None)
- 
         gray_uint8 = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
         vis_image = cv2.cvtColor(gray_uint8, cv2.COLOR_GRAY2BGR)
-        #vis_image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-
-        #vis_image = self.corner_detection_template.copy()
-
         # Threshold to detect strong corners
         vis_image[dst > 0.01 * dst.max()] = [0, 0, 255]  # Mark in red
-
         cv2.imwrite("corner_detection_result.jpg", vis_image)
         
+        #Shi-Tomasi method --> bad at the moment
+        #gray = cv2.cvtColor(self.corner_detection_template, cv2.COLOR_BGR2GRAY)
+        #corners = cv2.goodFeaturesToTrack(gray, 25, 0.01, 10)
+        #corners = np.int0(corners)
+
+        #gray_uint8 = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+        #vis_image = cv2.cvtColor(gray_uint8, cv2.COLOR_GRAY2BGR)
+        #for i in corners:
+        #    x, y = i.ravel()
+        #    cv2.circle(vis_image, (x, y), 10, (0, 0, 255), -1)
+
+        #cv2.imwrite("corner_detection_result.jpg", vis_image)
+
+
         return
     
