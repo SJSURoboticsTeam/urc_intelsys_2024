@@ -16,12 +16,12 @@ POSSIBLE_DICTS = [
     aruco.DICT_7x7_1000
 ]
 
-class ArucoAlignment(Node):
+class ArucoAlignment():
     def __init__(self):
-        super().__init__('aruco_alignment')
-        self.bridge = CvBridge()
-        self.subscriber = self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
-        self.publisher = self.create_publisher(PoseStamped, 'autonomous_typing', QOS)
+        #super().__init__('aruco_alignment')
+        #self.bridge = CvBridge()
+        #self.subscriber = self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
+        #self.publisher = self.create_publisher(PoseStamped, 'autonomous_typing', QOS)
 
         #self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
         self.parameters = aruco.DetectorParameters()
@@ -46,7 +46,7 @@ class ArucoAlignment(Node):
                 
 
     #get image, detect aruco tags, estimate pose, publish pose
-    def image_callback (self, msg):
+    def get_keyboard_pose (self, msg):
         #convert ROS2 Image to OpenCV image --> convert to grayscale
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
@@ -105,6 +105,7 @@ class ArucoAlignment(Node):
         #cv2.Mat.outputImage = gray_image.clone();
         #cv2.aruco.drawDetectedMarkers(outputImage, markerCorners, markerIds);
 
+'''
 def main(args=None):
     rclpy.init(args=args)
     node = ArucoAlignment()
@@ -114,3 +115,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+'''

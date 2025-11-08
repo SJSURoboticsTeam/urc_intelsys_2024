@@ -10,6 +10,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from keyboard_typing.template_matching import TemplateMatching
 from keyboard_typing.corner_detection import CornerDetection
+from keyboard_typing.aruco_alignment import ArucoAlignment
 
 
 
@@ -19,9 +20,13 @@ class AutonomousTyping(Node):
         super().__init__("autonomous_typing")
 
         #subscribes to IMAGE_TOPIC
-        #self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
+        self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
         #publishes PoseStamped message??
-        #self.publisher_ = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
+        self.publisher_ = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
+
+        #creates an instance of aruco alignment
+        self.aruco_detector = ArucoAlignment()
+
 
         #allows for you to have access to template image
         package_share_dir = get_package_share_directory("keyboard_typing")
@@ -30,6 +35,10 @@ class AutonomousTyping(Node):
 
         #load template image
         self.bridge = CvBridge()
+
+
+
+
         #use imread so that is loads in grayscale already. --> might need to change if corner detection?
         self.sift_template = cv2.imread(FULL_KEYBOARD_IMAGE_PATH, cv2.IMREAD_GRAYSCALE)
 
@@ -56,10 +65,10 @@ class AutonomousTyping(Node):
 
         self.get_logger().info("AutonomousTyping running")
 
-    #def image_callback(self, msg):
+    def image_callback(self, msg):
         #convert ROS2 Image to OpenCV image --> convert to grayscale
-     #   cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-    #    gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+        #cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+        #gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
         #call sift on the frame
     #    sift_output = self.sift_detector(gray_image)
@@ -68,6 +77,11 @@ class AutonomousTyping(Node):
 
         #self.publisher_.publish(sift_output)
         #self.get_logger().info(f'Sift output: "{sift_output}"')
+        pose = self.aruco_detector.get_keyboard_pose(msg)
+        if pose is not None:
+            self.publisher.publish(pose)
+            self.get_logger().info(f"Published keyboard pose: {pose}")
+
 
     def corner_detection(self):
         return
