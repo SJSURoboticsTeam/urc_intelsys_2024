@@ -7,6 +7,7 @@ import cv2.aruco as aruco
 import numpy as np
 from constants import IMAGE_TOPIC, QOS
 from geometry_msgs.msg import PoseStamped
+from math import atan2
 
 POSSIBLE_DICTS = [
     aruco.DICT_4x4_50,
@@ -30,7 +31,7 @@ class ArucoAlignment(Node):
         self.dist_coeffs = np.load('dist_coeffs.npy')
 
     #figure out which aruco dictionary to use --> do we know this beforehand?
-    def detect_aruco_dictionary(gray_image):
+    def detect_aruco_dictionary(self, gray_image):
         for d in POSSIBLE_DICTS:
             aruco_dict = aruco.getPredefinedDictionary(d)
             parameters = aruco.DetectorParameters()
@@ -57,9 +58,16 @@ class ArucoAlignment(Node):
             return
         
         #estimating tag poses
-        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.02, self.camera_matrix, self.distCoeffs)
+        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.02, self.camera_matrix, self.dist_coeffs)
 
         tag_positions = {int(ids[i]): tvecs[i][0] for i in range(len(ids))}
+        ''' 
+        Will look something like this:
+        Tag0: [x0, y0, z0] --> 3d coordinates of all tags from tvecs
+        Tag1: [x1, y1, z1]
+        Tag2: [x2, y2, z2]
+        Tag3: [x3, y3, z3]
+        '''
 
         required_tags = [0, 1, 2, 3]
 
@@ -69,20 +77,20 @@ class ArucoAlignment(Node):
     
     #computes pose
     def compute_pose(self, pts):
-        #compute normal vector for plane orientation
-        v1 = pts[1] - pts[0]
-        v2 = pts[3] - pts[0]
+        #compute normal vector for plane orientation by taking cross product of 2 edge vectors between tags
+        v1 = pts[1] - pts[0] #edge 1
+        v2 = pts[3] - pts[0] #edge 2 of keyboard
         normal = np.cross(v1, v2)
-        normal /= np.linalg.norm(normal)
+        normal /= np.linalg.norm(normal) #unit vector perpendicular to keyboard
 
-        #compute center of keyboard which is just the average of the 4 tags
+        #compute center of keyboard which is just the average of the 4 tags, so robot can center itself
         center = np.mean(pts, axis=0)
 
         #target position: how far we want to be away from keyboard
         offset_distance = 0.30
         target_position = center - normal * offset_distance
 
-        #calculate yaw from normal
+        #calculate yaw from normal (robot should face keyboard) --> does the rotation
         yaw = atan2(normal[0], normal[2])
 
         #convert to quaternion?
@@ -90,7 +98,7 @@ class ArucoAlignment(Node):
         #publish pose message
         pose = PoseStamped()
 
-        self.publisher_.publish(pose)
+        self.publisher.publish(pose)
         self.get_logger().info(f"Published target pose: pose = {target_position}")
 
         
@@ -104,5 +112,5 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__ == 'main':
+if __name__ == '__main__':
     main()
