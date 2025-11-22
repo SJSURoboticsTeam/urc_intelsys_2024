@@ -1,6 +1,9 @@
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
 
 
 def generate_launch_description():  # all launch files need a function with this name
@@ -40,23 +43,23 @@ def generate_launch_description():  # all launch files need a function with this
         package="pathfinder", executable="path_publisher", parameters=[config]
     )
     # create launch description for the luxonis depthai ros driver
-    # camera_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         get_package_share_directory("depthai_ros_driver")
-    #         + "/launch/camera.launch.py"
-    #     ),
-    # )
+    camera_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            get_package_share_directory("depthai_ros_driver")
+            + "/launch/camera.launch.py"
+        ),
+     )
 
-    #camera_localizer_node = Node(
-    #    package="obstacle_detection",
-    #    executable="camera_localizer_node",
-    #    name="camera_localizer",
-    #    parameters=[config],
-    #)
+    camera_localizer_node = Node(
+        package="obstacle_detection",
+        executable="camera_localizer_node",
+        name="camera_localizer",
+        parameters=[config],
+    )
 
     autonomous_typing_node = Node(
-        package="autonomous_typing",
-        executable="autonomous_typing_node",
+        package="keyboard_typing",
+        executable="autonomous_typing",
         name="autonomous_typing",
         parameters=[config]
     )
@@ -76,9 +79,9 @@ def generate_launch_description():  # all launch files need a function with this
             world_frame_node,
             # control package nodes
             task_manager_node,
-            # camera_launch,
+            camera_launch,
             path_finder_node,
-            #camera_localizer_node,
+            camera_localizer_node,
             autonomous_typing_node,
         ]
     )

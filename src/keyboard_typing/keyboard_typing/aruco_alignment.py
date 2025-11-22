@@ -10,10 +10,10 @@ from geometry_msgs.msg import PoseStamped
 from math import atan2
 
 POSSIBLE_DICTS = [
-    aruco.DICT_4x4_50,
+    aruco.DICT_4X4_50,
     aruco.DICT_5X5_100,
     aruco.DICT_6X6_250,
-    aruco.DICT_7x7_1000
+    aruco.DICT_7X7_1000
 ]
 
 class ArucoAlignment():
@@ -27,8 +27,8 @@ class ArucoAlignment():
         self.parameters = aruco.DetectorParameters()
 
         #camera stuff needed to determine position:
-        self.camera_matrix = np.load('camera_matrix.npy')
-        self.dist_coeffs = np.load('dist_coeffs.npy')
+        self.camera_matrix = None #np.load('camera_matrix.npy')
+        self.dist_coeffs = None #np.load('dist_coeffs.npy')
 
     #figure out which aruco dictionary to use --> do we know this beforehand?
     def detect_aruco_dictionary(self, gray_image):
@@ -57,6 +57,14 @@ class ArucoAlignment():
             self.get_logger().info("No aruco tags detected.")
             return
         
+        '''
+        output = cv_image.copy()
+        aruco.drawDetectedMarkers(output, corners, ids)
+
+        cv2.imshow("ArUco Detection", output)
+        cv2.waitKey(1)
+        '''
+
         #estimating tag poses
         rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, 0.02, self.camera_matrix, self.dist_coeffs)
 
@@ -73,7 +81,9 @@ class ArucoAlignment():
 
         if all(t in tag_positions for t in required_tags):
             pts = np.array([tag_positions[t] for t in required_tags])
-            self.compute_pose(pts)
+            pose = self.compute_pose(pts)
+            return pose
+        return None
     
     #computes pose
     def compute_pose(self, pts):
@@ -98,8 +108,10 @@ class ArucoAlignment():
         #publish pose message
         pose = PoseStamped()
 
-        self.publisher.publish(pose)
-        self.get_logger().info(f"Published target pose: pose = {target_position}")
+        return pose
+
+        #self.publisher.publish(pose)
+        #self.get_logger().info(f"Published target pose: pose = {target_position}")
 
         
         #cv2.Mat.outputImage = gray_image.clone();

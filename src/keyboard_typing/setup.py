@@ -1,4 +1,5 @@
 from setuptools import find_packages, setup
+from glob import glob
 
 package_name = 'keyboard_typing'
 
@@ -10,6 +11,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', glob('launch/*.py')),
         ('share/' + package_name + '/resource', ['resource/full_keyboard_template_image.jpg', 'resource/template_image.jpg']),  # install image specifically
     ],
     install_requires=['setuptools'],
@@ -22,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             "autonomous_typing = keyboard_typing.autonomous_typing:main",
+            "camera_node = keyboard_typing.autonomous_typing:main",
         ],
     },
 )

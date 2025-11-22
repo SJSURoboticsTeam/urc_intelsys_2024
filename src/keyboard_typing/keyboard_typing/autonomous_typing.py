@@ -22,7 +22,7 @@ class AutonomousTyping(Node):
         #subscribes to IMAGE_TOPIC
         self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
         #publishes PoseStamped message??
-        self.publisher_ = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
+        self.publisher = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
 
         #creates an instance of aruco alignment
         self.aruco_detector = ArucoAlignment()
