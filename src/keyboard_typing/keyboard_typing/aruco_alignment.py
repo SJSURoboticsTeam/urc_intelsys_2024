@@ -17,11 +17,13 @@ POSSIBLE_DICTS = [
 ]
 
 class ArucoAlignment():
-    def __init__(self):
+    def __init__(self, bridge):
         #super().__init__('aruco_alignment')
         #self.bridge = CvBridge()
         #self.subscriber = self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
         #self.publisher = self.create_publisher(PoseStamped, 'autonomous_typing', QOS)
+
+        self.bridge = bridge
 
         #self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
         self.parameters = aruco.DetectorParameters()
@@ -54,7 +56,7 @@ class ArucoAlignment():
         corners, ids, _ = self.detect_aruco_dictionary(gray_image)
 
         if ids is None or len(ids) < 4: #do we need exactly 4, or can we do with 3?
-            self.get_logger().info("No aruco tags detected.")
+            print("No aruco tags detected.")
             return
         
         '''

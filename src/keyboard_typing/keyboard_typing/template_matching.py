@@ -9,12 +9,16 @@ from matplotlib import pyplot as plt
 
 
 class TemplateMatching():
-    def __init__(self, template_path, image_path):
+    def __init__(self, template_path, image_path=None, image=None):
         print("Hi")
         #load template image
         #use imread so that is loads in grayscale already. --> might need to change if corner detection?
         self.template = cv2.imread(template_path, cv2.IMREAD_GRAYSCALE)
-        self.full_keyboard = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if image_path is not None:
+            self.full_keyboard = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+            #self.full_keyboard_copy = self.full_keyboard.copy()
+        elif image is not None:
+            self.full_keyboard = image
         self.full_keyboard_copy = self.full_keyboard.copy()
 
         if self.template is None:

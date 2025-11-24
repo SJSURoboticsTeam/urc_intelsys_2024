@@ -8,10 +8,13 @@ import matplotlib.pyplot as plt
 
 
 class CornerDetection():
-    def __init__(self, full_keyboard_template_path):
+    def __init__(self, image=None, full_keyboard_template_path=None):
         #load template image
-        self.corner_detection_template = cv2.imread(full_keyboard_template_path, cv2.IMREAD_COLOR)
-
+        if image is not None:
+            self.corner_detection_template = image
+        elif full_keyboard_template_path is not None:
+            self.corner_detection_template = cv2.imread(full_keyboard_template_path, cv2.IMREAD_COLOR)
+ 
         if self.corner_detection_template is None:
             print(f"Failed to load template image: {full_keyboard_template_path}")
             exit(1)

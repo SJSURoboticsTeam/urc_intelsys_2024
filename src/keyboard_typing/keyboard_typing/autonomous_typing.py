@@ -20,76 +20,75 @@ class AutonomousTyping(Node):
         super().__init__("autonomous_typing")
 
         #subscribes to IMAGE_TOPIC
-        self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
+        #self.create_subscription(Image, IMAGE_TOPIC, self.image_callback, QOS)
+        self.create_subscription(Image, "/camera_node/depth/image_raw", self.depth_callback, 10)
+        self.create_subscription(Image, "/camera_node/rgb/image_raw", self.rgb_callback, 10)
         #publishes PoseStamped message??
-        self.publisher = self.create_publisher(PoseStamped, "autonomous_typing", QOS)
+        self.publisher = self.create_publisher(PoseStamped, "autonomous_typing/pose", 10)
+
+        self.bridge = CvBridge()
 
         #creates an instance of aruco alignment
-        self.aruco_detector = ArucoAlignment()
-
+        self.aruco_detector = ArucoAlignment(bridge=self.bridge)
 
         #allows for you to have access to template image
         package_share_dir = get_package_share_directory("keyboard_typing")
-        FULL_KEYBOARD_IMAGE_PATH = os.path.join(package_share_dir, "resource", "full_keyboard_template_image.jpg")
-        TEMPLATE_IMAGE_PATH = os.path.join(package_share_dir, "resource", "template_image.jpg")
+        self.FULL_KEYBOARD_IMAGE_PATH = os.path.join(package_share_dir, "resource", "full_keyboard_template_image.jpg")
+        self.TEMPLATE_IMAGE_PATH = os.path.join(package_share_dir, "resource", "template_image.jpg")
 
         #load template image
-        self.bridge = CvBridge()
-
-
-
-
         #use imread so that is loads in grayscale already. --> might need to change if corner detection?
-        self.sift_template = cv2.imread(FULL_KEYBOARD_IMAGE_PATH, cv2.IMREAD_GRAYSCALE)
-
+        self.sift_template = cv2.imread(self.FULL_KEYBOARD_IMAGE_PATH, cv2.IMREAD_GRAYSCALE)
 
         if self.sift_template is None:
-            self.get_logger().error(f"Failed to load template image: {FULL_KEYBOARD_IMAGE_PATH}")
+            self.get_logger().error(f"Failed to load template image: {self.FULL_KEYBOARD_IMAGE_PATH}")
             exit(1)
-
-        sift_output = self.sift_detector()
-        
-        #for some reason this doesn't work
-        #template_matching_output = TemplateMatching(TEMPLATE_IMAGE_PATH, FULL_KEYBOARD_IMAGE_PATH).template_match()
-
-        #but this does
-        try:
-            template_matching_output = TemplateMatching(TEMPLATE_IMAGE_PATH, FULL_KEYBOARD_IMAGE_PATH)
-            template_matching_output.template_match()
-
-            corner_detection_output = CornerDetection(FULL_KEYBOARD_IMAGE_PATH)
-            corner_detection_output.corner_detect()
-
-        except Exception as e:
-            self.get_logger().error(f"TemplateMatching error: {e}")
 
         self.get_logger().info("AutonomousTyping running")
 
-    def image_callback(self, msg):
-        #convert ROS2 Image to OpenCV image --> convert to grayscale
-        #cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
-        #gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+    def rgb_callback(self, msg):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            #Aruco Detection
+            pose = self.aruco_detector.get_keyboard_pose(msg)
+            if pose is not None:
+                self.publisher.publish(pose)
+                self.get_logger().info(f"Published keyboard pose: {pose}")
+            
+            cv_image_gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+            template_matching_output = TemplateMatching(self.TEMPLATE_IMAGE_PATH, image=cv_image_gray)
+            result = template_matching_output.template_match()
+            self.get_logger().info(f"Template Matching Done")
 
-        #call sift on the frame
-    #    sift_output = self.sift_detector(gray_image)
+            corner_detection_output = CornerDetection(image=cv_image)
+            corner_detection_output.corner_detect()
+            self.get_logger().info(f"Corner Detection Done")
 
-        #corner = self.corner_detection(gray_image)
+            keypoints = self.sift_detector(cv_image)  # Pass current frame for keypoint detection
 
-        #self.publisher_.publish(sift_output)
-        #self.get_logger().info(f'Sift output: "{sift_output}"')
-        pose = self.aruco_detector.get_keyboard_pose(msg)
-        if pose is not None:
-            self.publisher.publish(pose)
-            self.get_logger().info(f"Published keyboard pose: {pose}")
+
+        except Exception as e:
+            self.get_logger().error(f"Something broke in rgb_callback: {e}")
+        #return None
+
+    def depth_callback(self, msg):
+        try:
+            depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+
+        except Exception as e:
+            self.get_logger().info(f"Something broke in depth_callback: {e}")
+        return None
+
 
 
     def corner_detection(self):
         return
     
-    def sift_detector(self):
+    def sift_detector(self, cv_image):
         #initialize sift detector
         sift = cv2.SIFT_create()
 
+        gray_frame = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
         #TEMPLATE:
         #find keypoints of template image (grayed out version) --> can put a mask
         template_keypoints = sift.detect(self.sift_template, None)
@@ -106,10 +105,10 @@ class AutonomousTyping(Node):
 
         #FRAME:
         #do the same
-        #frame_keypoints = sift.detect(gray_frame, None)
-        #self.get_logger().info(f"Number of Frame Keypoints: {len(frame_keypoints)}")
-        #frame_image_keypoints = cv2.drawKeypoints(gray_frame, frame_keypoints, None)
-        #cv2.imwrite('sift_frame_image_keypoints.jpg', frame_image_keypoints)
+        frame_keypoints = sift.detect(gray_frame, None)
+        self.get_logger().info(f"Number of Frame Keypoints: {len(frame_keypoints)}")
+        frame_image_keypoints = cv2.drawKeypoints(gray_frame, frame_keypoints, None)
+        cv2.imwrite('sift_frame_image_keypoints.jpg', frame_image_keypoints)
         
         #show image
         #cv2.imshow('SIFT Keypoints', frame_image_keypoints)
